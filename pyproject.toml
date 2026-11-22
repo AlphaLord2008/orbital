@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orbital"
+dynamic = ["version"]
+description = "Physics-based orbital mechanics simulator: two-body propagation with quantitative numerical validation."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Harshith Vaibhav" }]
+dependencies = [
+    "numpy>=1.26",
+]
+classifiers = [
+    "License :: Other/Proprietary License",
+    "Private :: Do Not Upload",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "matplotlib>=3.8",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "orbital.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
