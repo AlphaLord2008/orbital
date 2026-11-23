@@ -11,7 +11,7 @@ A spacecraft in a 400 km circular orbit moves at 7,668.56 m/s and goes around on
 | μ_E (GM, atmosphere included) | 3.986004418 × 10¹⁴ | m³/s² | WGS 84 defining parameter: NIMA TR8350.2; [ICG summary of WGS 84](https://www.unoosa.org/pdf/icg/2012/template/WGS_84.pdf) |
 | R_E (semi-major axis) | 6,378,137.0 | m | Same |
 
-The exact table number in TR8350.2 is to be confirmed against the document when `constants.py` is written (Task 3).
+Both values were confirmed on 2026-11-22 against NGA's [WGS 84 page](https://earth-info.nga.mil/GandG/wgs84/). The current WGS 84 standard is NGA.STND.0036_1.0.0_WGS84 (2014), which supersedes TR8350.2; `src/orbital/constants.py` cites it.
 
 GPS uses a slightly different GM, 3.9860050 × 10¹⁴ m³/s². The two differ by 1.5 × 10⁻⁷ relative, about a sixth of the 9.1 × 10⁻⁷ integrator error that T6 measures. Mixing them would visibly bias the result, so ORBITAL uses one documented value everywhere.
 

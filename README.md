@@ -8,7 +8,7 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 
 **ORBITAL 0.1 "First Orbit" is in development. The simulator does not exist yet.**
 
-This repository currently contains the project skeleton, the accepted requirements and architecture decisions, and a placeholder test. No physics code has been written.
+This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, and a tested gravitational-acceleration function. It cannot propagate an orbit yet; that arrives in Tasks 4–5.
 
 | Milestone | Status |
 | --- | --- |
@@ -21,7 +21,7 @@ This repository currently contains the project skeleton, the accepted requiremen
 | --- | --- | --- |
 | 1 | Physics reference calculations | Done |
 | 2 | Repository, environment, first passing test | Done |
-| 3 | Constants and gravitational acceleration | Not started |
+| 3 | Constants and gravitational acceleration | Done |
 | 4 | Semi-implicit Euler step | Not started |
 | 5 | Propagation loop, endpoint and impact policies | Not started |
 | 6 | Diagnostics (energy, angular momentum, period) | Not started |

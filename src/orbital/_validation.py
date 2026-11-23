@@ -1,0 +1,43 @@
+"""Input checks shared by ORBITAL's public functions (Requirements I5, I8).
+
+Internal module: the leading underscore marks it as not part of the public
+interface (I6), so it may change freely.
+"""
+
+import math
+import numbers
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
+
+def as_vector2(value: ArrayLike, name: str) -> NDArray[np.float64]:
+    """Return ``value`` as a new float64 array of shape (2,), or raise ValueError.
+
+    Accepts real numbers in any array-like form (list, tuple or array, of ints
+    or floats). Rejects booleans, complex numbers, non-numeric values, any shape
+    other than exactly (2,), NaN and infinity. The result is always a fresh
+    copy, so a caller's array is never modified or shared.
+    """
+    array = np.asarray(value)
+    if array.dtype.kind not in "iuf":  # signed int, unsigned int, float
+        raise ValueError(f"{name} must contain real numbers, got dtype {array.dtype}")
+    if array.shape != (2,):
+        raise ValueError(f"{name} must have shape (2,), got shape {array.shape}")
+    result = array.astype(np.float64)  # astype always returns a copy
+    if not np.all(np.isfinite(result)):
+        raise ValueError(f"{name} must be finite, got {result}")
+    return result
+
+
+def as_positive_scalar(value: float, name: str) -> float:
+    """Return ``value`` as a Python float that is finite and > 0, or raise ValueError.
+
+    Rejects booleans explicitly: in Python, True is an int equal to 1.
+    """
+    if isinstance(value, bool) or not isinstance(value, numbers.Real):
+        raise ValueError(f"{name} must be a real number, got {value!r}")
+    result = float(value)
+    if not math.isfinite(result) or result <= 0.0:
+        raise ValueError(f"{name} must be finite and > 0, got {result}")
+    return result
