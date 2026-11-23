@@ -30,6 +30,20 @@ def as_vector2(value: ArrayLike, name: str) -> NDArray[np.float64]:
     return result
 
 
+def as_positive_int(value: int, name: str) -> int:
+    """Return ``value`` as a Python int that is >= 1, or raise ValueError.
+
+    Accepts Python and NumPy integers. Rejects booleans, floats (even 3.0) and
+    strings, so a step count is never silently truncated or misread.
+    """
+    if isinstance(value, bool) or not isinstance(value, numbers.Integral):
+        raise ValueError(f"{name} must be an integer, got {value!r}")
+    result = int(value)
+    if result < 1:
+        raise ValueError(f"{name} must be >= 1, got {result}")
+    return result
+
+
 def as_positive_scalar(value: float, name: str) -> float:
     """Return ``value`` as a Python float that is finite and > 0, or raise ValueError.
 
