@@ -10,13 +10,21 @@ interface is exactly what this module exports (I6).
 """
 
 from orbital.constants import MU_EARTH, R_EARTH
-from orbital.dynamics import gravity_accel
+from orbital.dynamics import (
+    circular_initial_state,
+    circular_velocity,
+    gravity_accel,
+    semi_implicit_euler_step,
+)
 
 __version__ = "0.1.0.dev0"
 
 __all__ = [
     "MU_EARTH",
     "R_EARTH",
+    "circular_initial_state",
+    "circular_velocity",
     "gravity_accel",
+    "semi_implicit_euler_step",
     "__version__",
 ]
