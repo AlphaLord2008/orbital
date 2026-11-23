@@ -20,7 +20,7 @@ This repository currently contains the project skeleton, the accepted requiremen
 | # | Task | Status |
 | --- | --- | --- |
 | 1 | Physics reference calculations | Done |
-| 2 | Repository, environment, first passing test | In progress |
+| 2 | Repository, environment, first passing test | Done |
 | 3 | Constants and gravitational acceleration | Not started |
 | 4 | Semi-implicit Euler step | Not started |
 | 5 | Propagation loop, endpoint and impact policies | Not started |

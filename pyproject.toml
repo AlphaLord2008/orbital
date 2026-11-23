@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,12 +8,12 @@ dynamic = ["version"]
 description = "Physics-based orbital mechanics simulator: two-body propagation with quantitative numerical validation."
 readme = "README.md"
 requires-python = ">=3.11"
+license = "LicenseRef-Proprietary"
 authors = [{ name = "Harshith Vaibhav" }]
 dependencies = [
     "numpy>=1.26",
 ]
 classifiers = [
-    "License :: Other/Proprietary License",
     "Private :: Do Not Upload",
 ]
 
