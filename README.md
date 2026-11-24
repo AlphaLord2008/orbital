@@ -6,7 +6,7 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 
 ## Status
 
-**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; the validation report and the v0.1.0 release are still to come.
+**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; see the [validation report](docs/validation/v0.1-circular-orbit.md). The v0.1.0 release is still to come.
 
 This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, gravitational acceleration, the circular-orbit initial state, and a fixed-step semi-implicit Euler propagator with endpoint and impact handling, all tested. It propagates an orbit, measures its radius, speed, energy, angular momentum and period, and passes acceptance tests T3–T8 against the exact circular-orbit solution.
 
@@ -27,7 +27,7 @@ This repository currently contains the accepted requirements and architecture de
 | 6 | Diagnostics (energy, angular momentum, period) | Done |
 | 7 | Circular-orbit validation tests | Done |
 | 8 | Trajectory plot | Done |
-| 9 | Validation report | Not started |
+| 9 | Validation report | Done |
 | 10 | Review and tag v0.1.0 | Not started |
 
 ## What 0.1 will do (planned)
@@ -44,6 +44,7 @@ This repository currently contains the accepted requirements and architecture de
 - [`docs/requirements-0.1.md`](docs/requirements-0.1.md): what 0.1 must do, and its acceptance tests.
 - [`docs/decisions/`](docs/decisions/): architecture decision records (ADRs).
 - [`docs/reference-values.md`](docs/reference-values.md): hand-checkable reference values for a 400 km circular orbit.
+- [`docs/validation/v0.1-circular-orbit.md`](docs/validation/v0.1-circular-orbit.md): validation report — measured results of acceptance tests T3–T8.
 
 ## Development setup
 
