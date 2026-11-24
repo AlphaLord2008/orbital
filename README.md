@@ -6,7 +6,7 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 
 ## Status
 
-**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; plotting, the validation report and the v0.1.0 release are still to come.
+**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; the validation report and the v0.1.0 release are still to come.
 
 This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, gravitational acceleration, the circular-orbit initial state, and a fixed-step semi-implicit Euler propagator with endpoint and impact handling, all tested. It propagates an orbit, measures its radius, speed, energy, angular momentum and period, and passes acceptance tests T3–T8 against the exact circular-orbit solution.
 
@@ -26,7 +26,7 @@ This repository currently contains the accepted requirements and architecture de
 | 5 | Propagation loop, endpoint and impact policies | Done |
 | 6 | Diagnostics (energy, angular momentum, period) | Done |
 | 7 | Circular-orbit validation tests | Done |
-| 8 | Trajectory plot | Not started |
+| 8 | Trajectory plot | Done |
 | 9 | Validation report | Not started |
 | 10 | Review and tag v0.1.0 | Not started |
 
@@ -56,10 +56,20 @@ python -m pip install -e ".[dev]"
 pytest
 ```
 
+## Run the reference case
+
+```bash
+source .venv/bin/activate
+python scripts/first_orbit.py
+```
+
+This propagates a 400 km circular orbit for 10 orbital periods, prints the acceptance metrics (T3–T8) with the versions and commit needed to reproduce them, and saves `output/first_orbit.png`.
+
 ## Repository layout
 
 ```
 src/orbital/   physics engine package (NumPy only; no I/O or plotting)
+scripts/       reference-case script: metrics report and plot (Matplotlib)
 tests/         pytest test suite
 docs/          requirements, decisions, reference values
 ```
