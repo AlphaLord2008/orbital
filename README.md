@@ -6,9 +6,9 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 
 ## Status
 
-**ORBITAL 0.1 "First Orbit" is in development. The simulator does not exist yet.**
+**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; plotting, the validation report and the v0.1.0 release are still to come.
 
-This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, gravitational acceleration, the circular-orbit initial state, and a fixed-step semi-implicit Euler propagator with endpoint and impact handling, all tested. It can propagate an orbit and measure its radius, speed, energy, angular momentum and period, but its accuracy has not yet been validated against the analytical solution (Task 7).
+This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, gravitational acceleration, the circular-orbit initial state, and a fixed-step semi-implicit Euler propagator with endpoint and impact handling, all tested. It propagates an orbit, measures its radius, speed, energy, angular momentum and period, and passes acceptance tests T3–T8 against the exact circular-orbit solution.
 
 | Milestone | Status |
 | --- | --- |
@@ -25,7 +25,7 @@ This repository currently contains the accepted requirements and architecture de
 | 4 | Semi-implicit Euler step | Done |
 | 5 | Propagation loop, endpoint and impact policies | Done |
 | 6 | Diagnostics (energy, angular momentum, period) | Done |
-| 7 | Circular-orbit validation tests | Not started |
+| 7 | Circular-orbit validation tests | Done |
 | 8 | Trajectory plot | Not started |
 | 9 | Validation report | Not started |
 | 10 | Review and tag v0.1.0 | Not started |
