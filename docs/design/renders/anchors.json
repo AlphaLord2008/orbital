@@ -1,0 +1,206 @@
+{
+ "d1_iss": {
+  "axis_x": [
+   655.0,
+   1092.8
+  ],
+  "axis_y": [
+   1936.5,
+   1283.7
+  ],
+  "marker": [
+   1958.8,
+   1020.1
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1440.0,
+   880.0
+  ],
+  "sample_k": 1851
+ },
+ "m1_iss": {
+  "axis_x": [
+   -1.0,
+   700.0
+  ],
+  "axis_y": [
+   635.5,
+   793.6
+  ],
+  "marker": [
+   649.1,
+   664.0
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   390.0,
+   594.0
+  ],
+  "sample_k": 1851
+ },
+ "d2_e1": {
+  "axis_x": [
+   2323.4,
+   782.2
+  ],
+  "axis_y": [
+   1467.8,
+   339.7
+  ],
+  "marker": [
+   997.0,
+   549.6
+  ],
+  "marker_visible": true,
+  "periapsis": [
+   2092.4,
+   807.7
+  ],
+  "apoapsis": [
+   764.7,
+   956.7
+  ],
+  "earth_center": [
+   1578.7,
+   864.6
+  ],
+  "sample_k": 2600
+ },
+ "m3_e1": {
+  "axis_x": [
+   757.5,
+   289.3
+  ],
+  "axis_y": [
+   401.8,
+   99.7
+  ],
+  "marker": [
+   203.4,
+   190.8
+  ],
+  "marker_visible": true,
+  "periapsis": [
+   661.0,
+   300.0
+  ],
+  "apoapsis": [
+   111.7,
+   361.6
+  ],
+  "earth_center": [
+   447.5,
+   323.6
+  ],
+  "sample_k": 2600
+ },
+ "d3_k111": {
+  "axis_x": [
+   2314.6,
+   783.1
+  ],
+  "axis_y": [
+   1477.1,
+   349.5
+  ],
+  "marker": [
+   1017.1,
+   531.9
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1586.9,
+   863.7
+  ],
+  "sample_k": 2600
+ },
+ "d4_impact": {
+  "axis_x": [
+   462.1,
+   1160.0
+  ],
+  "axis_y": [
+   2029.6,
+   1454.4
+  ],
+  "marker": [
+   2027.6,
+   1079.2
+  ],
+  "marker_visible": false,
+  "impact": [
+   2027.6,
+   1079.2
+  ],
+  "impact_exact": [
+   2031.2,
+   1074.8
+  ],
+  "start": [
+   796.6,
+   1071.0
+  ],
+  "earth_center": [
+   1440.0,
+   900.0
+  ],
+  "sample_k": 1810
+ },
+ "d5_geo": {
+  "axis_x": [
+   1332.4,
+   944.1
+  ],
+  "axis_y": [
+   1567.5,
+   933.5
+  ],
+  "marker": [
+   2134.4,
+   995.1
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1440.0,
+   880.0
+  ],
+  "sample_k": 2671
+ },
+ "d6_escape": {
+  "axis_x": [
+   924.9,
+   1047.3
+  ],
+  "axis_y": [
+   1185.4,
+   938.6
+  ],
+  "marker": [
+   1896.1,
+   500.4
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1000.0,
+   900.0
+  ],
+  "sample_k": 10800
+ },
+ "c1_closeup": {
+  "marker": [
+   788.5,
+   500.8
+  ],
+  "marker_visible": true,
+  "exact_now": [
+   816.7,
+   498.9
+  ],
+  "earth_center": [
+   373.4,
+   -399.3
+  ],
+  "sample_k": 2776
+ }
+}

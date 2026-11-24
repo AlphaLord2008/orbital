@@ -20,3 +20,12 @@ Ideas that are deliberately **not** part of ORBITAL 0.1. Listing something here 
 ## Small items
 
 - Precise event detection (impact time, apsis passage) by interpolation (ADR-0002 §2.7).
+
+## Deferred from Web Alpha (2026-11-24)
+
+- Integrator comparison in the UI (needs ORBITAL 0.2).
+- Inclined orbits by rotating the 2D solution (exact for a point-mass Earth by symmetry); needs a ground-track and epoch decision first.
+- Real star catalogue fixed in the inertial frame (no random starfield).
+- Light or projector theme (tokens make it cheap).
+- Tablet-specific high-fidelity frames (drawer layout is specified in the design system; frames deferred).
+- More tested conditions: each needs a pre-registered v0.1.1-style case.
