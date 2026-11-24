@@ -1,9 +1,9 @@
 """ORBITAL: a two-body orbital mechanics simulator.
 
-Version 0.1 ("First Orbit") is in development; docs/requirements-0.1.md
-describes what it will provide.
+Version 0.1.0 ("First Orbit"): a validated two-body propagator. See
+docs/requirements-0.1.md and docs/validation/v0.1-circular-orbit.md.
 
-Package rules (docs/requirements-0.1.md, I1-I8): this package imports only
+Package rules (docs/requirements-0.1.md, I1-I8a): this package imports only
 the Python standard library and NumPy, uses SI units at every public
 interface, and performs no file I/O, printing or plotting. The public
 interface is exactly what this module exports (I6).
@@ -25,7 +25,7 @@ from orbital.diagnostics import (
 )
 from orbital.propagate import Trajectory, propagate, steps_for_duration
 
-__version__ = "0.1.0.dev0"
+__version__ = "0.1.0"
 
 __all__ = [
     "MU_EARTH",

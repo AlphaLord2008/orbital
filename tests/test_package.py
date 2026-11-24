@@ -1,7 +1,6 @@
-"""Task 2 placeholder test: proves the package installs and imports.
+"""Package-level checks: the package installs and imports, with the released version.
 
-The real acceptance tests (T1-T12 in docs/requirements-0.1.md) arrive from
-Task 3 onward, alongside the code they test.
+The acceptance tests (T1-T12 in docs/requirements-0.1.md) live in the other test files.
 """
 
 import sys
@@ -10,7 +9,7 @@ import orbital
 
 
 def test_package_imports_with_version():
-    assert orbital.__version__ == "0.1.0.dev0"
+    assert orbital.__version__ == "0.1.0"
 
 
 def test_python_meets_minimum_version():

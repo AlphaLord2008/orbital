@@ -6,47 +6,40 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 
 ## Status
 
-**ORBITAL 0.1 "First Orbit" is in development.** The two-body propagator works and its accuracy is validated against the analytical circular orbit; see the [validation report](docs/validation/v0.1-circular-orbit.md). The v0.1.0 release is still to come.
-
-This repository currently contains the accepted requirements and architecture decisions, the WGS 84 constants, gravitational acceleration, the circular-orbit initial state, and a fixed-step semi-implicit Euler propagator with endpoint and impact handling, all tested. It propagates an orbit, measures its radius, speed, energy, angular momentum and period, and passes acceptance tests T3–T8 against the exact circular-orbit solution.
+**ORBITAL 0.1.0 "First Orbit" is released.** It is a two-body orbit propagator whose accuracy is validated against the exact circular-orbit solution; see the [validation report](docs/validation/v0.1-circular-orbit.md) and the [release notes](docs/releases/v0.1.0.md).
 
 | Milestone | Status |
 | --- | --- |
 | 0.0 Planning: requirements, architecture decisions | Complete |
-| 0.1 First Orbit: validated 2D two-body propagator | In progress |
+| 0.1 First Orbit: validated 2D two-body propagator | **Released (v0.1.0)** |
+| 0.2 Numerical reliability: integrator comparison | Planned, not started |
 
-### 0.1 progress
+## What 0.1 does
 
-| # | Task | Status |
-| --- | --- | --- |
-| 1 | Physics reference calculations | Done |
-| 2 | Repository, environment, first passing test | Done |
-| 3 | Constants and gravitational acceleration | Done |
-| 4 | Semi-implicit Euler step | Done |
-| 5 | Propagation loop, endpoint and impact policies | Done |
-| 6 | Diagnostics (energy, angular momentum, period) | Done |
-| 7 | Circular-orbit validation tests | Done |
-| 8 | Trajectory plot | Done |
-| 9 | Validation report | Done |
-| 10 | Review and tag v0.1.0 | Not started |
-
-## What 0.1 will do (planned)
-
-- Propagate one spacecraft around a point-mass Earth in a 2D Earth-centred inertial frame, in SI units and float64.
-- Integrate with fixed-step semi-implicit (symplectic) Euler.
-- Plot the trajectory to scale.
-- Prove the numerical accuracy against the exact circular-orbit solution with 12 quantitative acceptance tests: angular-momentum conservation, bounded radius and energy error, orbital period, position error, first-order convergence, input validation and more.
+- Propagates one spacecraft around a point-mass Earth in a 2D Earth-centred inertial frame, in SI units and float64.
+- Integrates with fixed-step semi-implicit (symplectic) Euler, with a documented endpoint policy, surface-impact detection and non-finite-state errors.
+- Measures radius, speed, specific energy, angular momentum and orbital period.
+- Plots the trajectory to scale.
+- Passes 12 quantitative acceptance tests (166 automated tests in total), including angular-momentum conservation, bounded radius and energy error, period and position against the exact solution, and first-order convergence.
 
 0.1 deliberately excludes 3D motion, perturbations, maneuvers, interactive visualization and any AI features. See [`BACKLOG.md`](BACKLOG.md).
 
-## Documentation
+## Validation summary
 
-- [`docs/requirements-0.1.md`](docs/requirements-0.1.md): what 0.1 must do, and its acceptance tests.
-- [`docs/decisions/`](docs/decisions/): architecture decision records (ADRs).
-- [`docs/reference-values.md`](docs/reference-values.md): hand-checkable reference values for a 400 km circular orbit.
-- [`docs/validation/v0.1-circular-orbit.md`](docs/validation/v0.1-circular-orbit.md): validation report — measured results of acceptance tests T3–T8.
+Reference case: 400 km circular orbit, Δt = 1 s, 10 orbits (55,536 steps, 0.57 s).
 
-## Development setup
+| Check | Result | Tolerance |
+| --- | --- | --- |
+| Angular momentum, max relative change | 8.7 × 10⁻¹⁵ | ≤ 10⁻¹⁰ |
+| Radius, max relative deviation (bounded, not growing) | 5.7 × 10⁻⁴ | ≤ 10⁻³ |
+| Energy, max relative deviation (bounded, not drifting) | 1.3 × 10⁻⁶ | ≤ 10⁻⁵ |
+| Orbital period vs analytical | 9.1 × 10⁻⁷ | ≤ 10⁻⁵ |
+| Position error after one orbit | 38.7 m | ≤ 100 m |
+| Convergence order (error ratio for 10× Δt) | 10.1 | 9 to 11 |
+
+Full method, reproducibility record, interpretation and limitations: [validation report](docs/validation/v0.1-circular-orbit.md).
+
+## Quick start
 
 Requires Python 3.12 (3.11 minimum) on macOS or Linux.
 
@@ -54,17 +47,28 @@ Requires Python 3.12 (3.11 minimum) on macOS or Linux.
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[dev]"
-pytest
+pytest                          # run the test suite
+python scripts/first_orbit.py   # reference case: metrics report and output/first_orbit.png
 ```
 
-## Run the reference case
+Using the library directly (all units SI):
 
-```bash
-source .venv/bin/activate
-python scripts/first_orbit.py
+```python
+from orbital import circular_initial_state, first_period, propagate, specific_energy
+
+r0, v0 = circular_initial_state(altitude=400_000.0)       # m, m/s
+trajectory = propagate(r0, v0, dt=1.0, n_steps=6_000)      # s
+print(first_period(trajectory))                            # ~5553.63 s
+print(specific_energy(trajectory.r, trajectory.v)[-1])     # J/kg
 ```
 
-This propagates a 400 km circular orbit for 10 orbital periods, prints the acceptance metrics (T3–T8) with the versions and commit needed to reproduce them, and saves `output/first_orbit.png`.
+## Documentation
+
+- [`docs/requirements-0.1.md`](docs/requirements-0.1.md): what 0.1 must do, and its acceptance tests.
+- [`docs/decisions/`](docs/decisions/): architecture decision records (ADRs).
+- [`docs/reference-values.md`](docs/reference-values.md): reference values for a 400 km circular orbit.
+- [`docs/validation/v0.1-circular-orbit.md`](docs/validation/v0.1-circular-orbit.md): validation report.
+- [`docs/releases/v0.1.0.md`](docs/releases/v0.1.0.md): release notes.
 
 ## Repository layout
 
@@ -72,7 +76,7 @@ This propagates a 400 km circular orbit for 10 orbital periods, prints the accep
 src/orbital/   physics engine package (NumPy only; no I/O or plotting)
 scripts/       reference-case script: metrics report and plot (Matplotlib)
 tests/         pytest test suite
-docs/          requirements, decisions, reference values
+docs/          requirements, decisions, reference values, validation, releases
 ```
 
 ## License
