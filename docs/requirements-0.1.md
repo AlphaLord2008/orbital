@@ -1,6 +1,6 @@
 # ORBITAL 0.1 — Requirements
 
-**Status:** rev 2, accepted 2026-10-28. Decisions behind these requirements are in [ADR-0001](decisions/ADR-0001-toolchain-and-core-boundary.md) and [ADR-0002](decisions/ADR-0002-frame-units-state.md). Changes are listed in §8.
+**Status:** rev 3, accepted 2026-11-23 (rev 2 accepted 2026-10-28). Decisions behind these requirements are in [ADR-0001](decisions/ADR-0001-toolchain-and-core-boundary.md) and [ADR-0002](decisions/ADR-0002-frame-units-state.md). Changes are listed in §8.
 
 ORBITAL 0.1 propagates one spacecraft around a point-mass Earth with a fixed-step semi-implicit Euler integrator, plots the result, and proves its numerical accuracy against the analytical circular orbit.
 
@@ -56,6 +56,7 @@ These keep the engine usable by any future frontend without building for one now
 | I6 | The public interface is exactly what `orbital/__init__.py` exports; everything else is internal and may change freely. |
 | I7 | No web server, serialisation layer, async code or frontend dependency in 0.1. |
 | I8 | **Input validation at every public entry point.** Position and velocity must convert to a NumPy float64 array of shape exactly (2,). Any other shape — (3,), (2, 1), (1, 2), a scalar — raises `ValueError` before any computation; NumPy broadcasting is never relied on. Complex, non-numeric or non-finite values raise `ValueError`. Real numeric input of another type (a list, integers) is accepted and converted. Inputs are copied into new float64 arrays, so a caller's arrays are never modified or aliased. Scalars Δt, μ, body radius and duration must be finite and > 0; n_steps must be an integer ≥ 1 (Python or NumPy integer; `bool` rejected). `propagate` validates once at entry; its internal loop may use unvalidated helpers for speed. |
+| I8a | **Diagnostics accept one state or many.** `radius`, `speed`, `specific_energy` and `angular_momentum_z` accept position and velocity of shape exactly (2,) (one state) or (N, 2) with N ≥ 1 (one state per row). Every other shape raises `ValueError`; broadcasting is still never relied on, and r and v must have the same shape. All other I8 rules apply. One state returns a Python float; N states return a float64 array of shape (N,). |
 
 Planned public interface (names may be refined during implementation; units SI):
 
@@ -141,5 +142,6 @@ A tolerance may change only after this investigation, with the reason written in
 
 | Rev | Date | Change |
 | --- | --- | --- |
+| 3 | 2026-11-23 | I8a added: diagnostics accept shape (2,) or (N, 2), so a whole trajectory can be checked in one vectorised call (needed by T3–T7). Approved with Task 6. Scope unchanged |
 | 2 | 2026-10-28 | F4/F5: tolerance rule and end-time guarantee made precise, resolving rev 1's contradiction (snapping 0.3/0.1 to 3 steps gives t_end slightly above 0.3); case table added. F8a: period detection defined, t = 0 excluded. I8: shape, finiteness and float64 validation. T3: per-step vs accumulated drift distinguished. T9: cases enumerated. T1: unit-sanity check against the reference value. Scope unchanged. Accepted 2026-10-28 |
 | 1 | 2026-10-28 | First requirements after direction approval |

@@ -16,6 +16,13 @@ from orbital.dynamics import (
     gravity_accel,
     semi_implicit_euler_step,
 )
+from orbital.diagnostics import (
+    angular_momentum_z,
+    first_period,
+    radius,
+    specific_energy,
+    speed,
+)
 from orbital.propagate import Trajectory, propagate, steps_for_duration
 
 __version__ = "0.1.0.dev0"
@@ -24,11 +31,16 @@ __all__ = [
     "MU_EARTH",
     "R_EARTH",
     "Trajectory",
+    "angular_momentum_z",
     "circular_initial_state",
     "circular_velocity",
+    "first_period",
     "gravity_accel",
     "propagate",
+    "radius",
     "semi_implicit_euler_step",
+    "specific_energy",
+    "speed",
     "steps_for_duration",
     "__version__",
 ]

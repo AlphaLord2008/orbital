@@ -22,7 +22,8 @@ ALTITUDE = 400_000.0  # reference orbit [m]
 
 
 def angular_momentum_z(r, v):
-    """h = x * v_y - y * v_x [m^2/s]. Test helper; the library version arrives in Task 6."""
+    """h = x * v_y - y * v_x [m^2/s]. Kept independent of orbital.angular_momentum_z on purpose,
+    so these step tests do not depend on the diagnostics they help validate."""
     return r[0] * v[1] - r[1] * v[0]
 
 
