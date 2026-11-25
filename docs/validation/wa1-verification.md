@@ -7,7 +7,7 @@
 
 | Criterion (roadmap WA-1) | Status | Evidence |
 |---|---|---|
-| A PR with green CI | **Met** | [CI run 45707384367](https://github.com/AlphaLord2008/orbital/actions/runs/45707384367) on `e57ce6c`: 8 of 8 jobs passed |
+| A PR with green CI | **Met** | [CI run 45707384367](https://github.com/AlphaLord2008/orbital/actions/runs/45707384367) on `339d802`: 8 of 8 jobs passed |
 | …produces a preview URL | **Pending: Cloudflare secrets** | Deploy workflow ran and skipped with a notice ([run 45707382444](https://github.com/AlphaLord2008/orbital/actions/runs/45707382444)); setup steps in `docs/deploy.md` |
 | Zero CSP violations in the console | **Met locally and in CI (production headers via `serve-dist.mjs`); Pending on Cloudflare** | e2e `shell renders…` asserts no `securitypolicyviolation` events and no console errors in Chromium, Firefox and WebKit; the deploy job re-checks the served headers |
 | ADR-0006 moves to Accepted (or is revised) | **Revised (rev 2); Accepted after the account-side checks** | ADR-0006 §3 table |
