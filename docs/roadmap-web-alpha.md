@@ -1,42 +1,43 @@
 # ORBITAL Web Alpha — Implementation roadmap
 
-**Revision:** 1 (WA-0, 2026-11-24)
-**Scope:** `requirements-web-alpha.md` rev 2, ADR-0003 … ADR-0008, `requirements-0.1.1.md` rev 1.
+**Revision:** 2 (WA-0 complete, 2026-11-25)
+**Scope:** `requirements-web-alpha.md` rev 4, ADR-0003 … ADR-0008, `requirements-0.1.1.md` rev 1.
 **Rule:** a milestone is done only when every acceptance criterion has linked evidence (a CI run, a report, a recording or a signed-off design). Nothing is ticked on a test that was not run.
 
 ## Gates
 
 | Gate | Between | Passes when |
 |---|---|---|
-| **G1 Design approval** | WA-0 → any production UI (WA-3) | You approve the high-fidelity designs and the design system in writing, including any change requests |
+| **G1 Design approval** | WA-0 → any production UI (WA-3) | You approve the high-fidelity designs and the design system in writing, including any change requests. **Passed 2026-11-25** (`docs/design/README.md`). |
 | **R1 Re-estimate** | after WA-1 | Logged hours vs estimates for WA-0 and WA-1; the remaining estimates are scaled by the ratio and the timeline redrawn |
 | **G2 Evidence** | WA-2 → engine output in the scene (WA-3) | v0.1.1 cases pass in Python; the TS engine passes analytic validation, T1–T12 and conformance in four environments |
 | **G3 Usability** | WA-7 → release | Every critical or high usability finding is fixed and re-checked, or explicitly accepted by you |
 
 ## Milestones
 
-### WA-0 — Decisions and design *(this milestone; no production code)*
+### WA-0 — Decisions and design *(complete 2026-11-25; no production code)*
 
 | Deliverable | Where | Status |
 |---|---|---|
-| Finalized Web Alpha requirements | `docs/requirements-web-alpha.md` rev 2 | Delivered |
+| Finalized Web Alpha requirements | `docs/requirements-web-alpha.md` rev 4 | Delivered |
 | Pre-registered v0.1.1 validation plan | `docs/requirements-0.1.1.md` rev 1 (SHA-256 `908a3366…db9165`, posted 2026-11-23 23:38 EST) | Delivered, frozen |
 | ADR-0003 … ADR-0008 | `docs/decisions/` | Delivered (ADR-0006 provisional) |
-| Component design system | ORBITAL Design System artifact; summary in `docs/design/README.md` | Delivered |
-| High-fidelity desktop and mobile designs | ORBITAL Web Alpha designs artifact (8 desktop, 3 mobile) | Delivered |
-| Realistic visualization concept | Concept board + `docs/design/renders/` + `scripts/design/` | Delivered |
+| Component design system | ORBITAL Design System artifact v2; tokens in `docs/design/tokens.json` | Approved at G1 |
+| High-fidelity desktop and mobile designs | ORBITAL Web Alpha designs artifact (desktop D1–D9, mobile M1–M5), revision 2 | Approved at G1 |
+| Realistic visualization concept | Concept board + `docs/design/renders/rev2/` + `scripts/design/` | Approved at G1 |
 | Roadmap and acceptance criteria | this file | Delivered |
-| Reference devices; domain name | your decision | **Open** |
+| Domain name | your decision | **Deferred:** a temporary deployment domain is used from WA-1; the custom domain is chosen before WA-8 |
+| Reference devices (named physical devices per class A–D) | your decision | **Carried to WA-4**, where the performance budgets are first measured |
 | Time log started | `docs/time-log.md` | Template delivered |
 
-**Accepted when:** you accept the ADRs and requirements, and you approve the designs (**G1**).
+**Accepted when:** you accept the ADRs and requirements, and you approve the designs (**G1**). **Accepted 2026-11-25:** G1 passed with five non-blocking implementation considerations (G1-1 … G1-5, `docs/design/README.md`).
 
 ### WA-1 — Scaffold, CI and hosting check (8–12 h)
 
 1. pnpm workspace `web/` with `packages/engine` (empty, boundary rules) and `apps/web` (strict TS shell rendering only "ORBITAL", no product UI).
 2. CI (GitHub Actions): Python 3.11/3.12 suite; typecheck; lint; Vitest; build; size-limit baseline; Playwright smoke in Chromium, Firefox, WebKit.
 3. Engine boundary check: `@orbital/engine` fails CI if it imports DOM, React, three or app code.
-4. Hosting: the D7 verification checklist (ADR-0006 §3); preview deploy per PR; `_headers` with the CSP.
+4. Hosting: the D7 verification checklist (ADR-0006 §3); preview deploy per PR; `_headers` with the CSP. Deploys use a temporary provider domain until the custom domain is chosen.
 5. Lighthouse CI baseline on the preview.
 6. Choose Radix vs React Aria by the accessibility of slider and number field (ADR-0007).
 

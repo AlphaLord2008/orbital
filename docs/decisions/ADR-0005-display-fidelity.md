@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Status** | Accepted (2026-11-23), decision D6; revision 2 (2026-11-24) pending design approval G1 |
+| **Status** | Accepted (2026-11-23), decision D6; revision 2 accepted with design approval G1 (2026-11-25); revision 3 records the G1 implementation considerations |
 | **Date** | 2026-11-23 |
 | **Decider** | Harshith Vaibhav |
 | **Advisors** | Claude; ChatGPT (review) |
@@ -25,10 +25,12 @@
 | R9 | No Sun lighting, terminator, starfield, ground track or real-date implication. | Not modelled (ADR-0004) |
 | R10 | Evidence labels follow ADR-0008 exactly. Run diagnostics are captioned "self-consistency, not accuracy". | v0.1 finding: a wrong μ passes conservation checks |
 | R11 | Explore and Analyze (WA-F18) render the same run, the same sample k and the same camera. A mode switch changes only panel density. | One truth; no mode can show a different number |
-| R12 | The spacecraft marker has a constant screen size: 12 px disc, 2 px dark outline, 26 px accent selection ring, and a permanent "not to scale" label. When the Earth occludes it, it is hidden (ADR-0004), and a dashed ring with a "behind Earth" label marks its position. | Review: the marker was hard to find; true size is far below a pixel |
+| R12 | The spacecraft marker has a constant screen size: 12 px disc, 2 px dark outline, 26 px accent selection ring, and a permanent "not to scale" label. When the Earth occludes it, it is hidden (ADR-0004), and a dashed ring with a "behind Earth" label marks its position. That indicator is the one intentional exception to occlusion: it is drawn on top of the Earth, always dashed and always labelled, so it cannot be read as a visible spacecraft. | Review: the marker was hard to find; true size is far below a pixel |
 | R13 | The optional velocity arrow points along v at sample k, from the ring edge, at a fixed 40 px length. Direction only; no scale and no number. | Same sample rule as R1; a scaled arrow would imply a magnitude reading |
 | R14 | The analytical surface crossing is computed by the analytic module (time of flight to R_E) and drawn as an open cyan diamond labelled with its exact time. When it is under 24 px from the numerical impact cross, an inset view shows both at a zoom where they separate, with the gap in seconds and kilometres labelled as this run's own comparison. Validation results for impact (I1) appear only in the evidence card. | Review: the two events must not be confused |
 | R15 | Orbital elements presented as the orbit's properties are closed-form values for the configured initial state, tagged *exact*. Osculating elements computed from an integrator state (r_k, v_k) are not presented as the orbit's elements. Run-measured quantities (first period, altitude range) are shown under Advanced, labelled *run*. | Semi-implicit Euler's stored r and v are effectively half a step apart (§2b) |
+| R16 | Simplification and interpolation never hide an event or a discrepancy. RDP (R3) always keeps: the first and last samples; every revolution-boundary sample (R4); the samples on either side of each local extremum of \|r\| (apsides); the impact-detecting sample (R7); and any sample where a run flag changes. Decimation is per display only and never touches the data behind readouts, plots, CSV or the analytic comparison. The ghost marker and the exact path come from the analytic module at full resolution and are never decimated against the computed path, so the computed-vs-exact gap is shown at its true size. Hermite interpolation (R2) only moves the marker between samples k and k+1; it never feeds a readout, an event time or the ghost comparison. | G1 consideration G1-2 |
+| R17 | Every scene element is either **computed** (from engine samples or the analytic module) or **illustrative** (a rendering aid). Computed: trajectory vertices, marker position (Hermite between computed samples), velocity direction, impact cross, analytical crossing, exact path, ghost marker, all numbers. Illustrative: Earth texture and its starting orientation, camera-attached lighting, marker size and ring, arrow length, the behind-Earth indicator, axes styling, colours. The methodology page lists both, the Data view contains only computed values, and no illustrative element carries a number. | G1 consideration G1-4 |
 
 ## 2. Evidence from WA-0 (design renders, 2026-11-23)
 
@@ -52,4 +54,5 @@ The display layer needs its own tests: mode switching preserves run, sample and 
 | Rev | Date | Change |
 | --- | --- | --- |
 | 1 | 2026-11-23 | Accepted. R4 (revolution rule) and R8 (ghost marker) added from WA-0 design findings. |
+| 3 | 2026-11-25 | G1: R12 states the behind-Earth exception; R16 event-preserving simplification and interpolation; R17 computed vs illustrative. |
 | 2 | 2026-11-24 | WA-0 design review: R7 reworded; R11 modes share state; R12 marker visibility; R13 velocity arrow; R14 numerical impact vs analytical crossing and inset; R15 exact elements, with the osculating-element evidence in §2b. |

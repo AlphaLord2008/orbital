@@ -1,7 +1,7 @@
 # ORBITAL Web Alpha — Requirements
 
-**Revision:** 3 (WA-0 design review, 2026-11-24)
-**Status:** Approved scope. Decisions D1–D14 of the Web Alpha proposal, rev 2, are approved; D7 is provisional until the WA-1 hosting verification.
+**Revision:** 4 (G1, 2026-11-25)
+**Status:** Approved scope. Decisions D1–D14 of the Web Alpha proposal, rev 2, are approved; D7 is provisional until the WA-1 hosting verification. Designs approved at G1 (2026-11-25); see `docs/design/README.md`.
 **Related:** ADR-0003 … ADR-0008; `requirements-0.1.1.md` (pre-registered validation of the presets); `roadmap-web-alpha.md` (milestones and acceptance).
 
 Web Alpha is a public, browser-based simulator for one spacecraft around one point-mass Earth in the equatorial plane. It uses the v0.1 integrator and shows its own evidence. The Python package stays the authoritative physics implementation (ADR-0003).
@@ -36,7 +36,7 @@ Requirement IDs are stable. A changed requirement keeps its ID and gets a revisi
 | WA-F10 | **Impact.** Two distinct marks. *Numerical impact detected*: red cross at the first sample with \|r\| ≤ R_E, labelled with its sample and time. *Analytical surface crossing*: open cyan diamond at the exact two-body crossing, labelled with its exact time (shown when the analytic overlay is on, and always in Analyze for impact runs). Shape and colour both differ. When the two are under 24 px apart on screen, Analyze shows an **Impact detail** inset (a zoomed second view) with both marks and the gap in seconds and kilometres, labelled as this run's own comparison. | MUST |
 | WA-F11 | **Presets**, each exactly one validated or tested case: ISS 400 km (V0), GEO (P1), Ellipse k = 1.10 (E1), Escape k = 1.42 (X1), Impact k = 0.98 (I1), Coarse step dt = 60 s (P2). Parameters are as in `requirements-0.1.1.md` §5. | MUST |
 | WA-F12 | **Share link.** The URL carries the full scenario (schema v1, §8). Opening it reproduces the identical run and tier. | MUST |
-| WA-F13 | **Methodology page.** Model and assumptions; constants with sources; evidence tiers; v0.1.0 and v0.1.1 results; conformance report; known limits; NASA imagery credit. | MUST |
+| WA-F13 | **Methodology page.** Model and assumptions; constants with sources; evidence tiers; v0.1.0 and v0.1.1 results; conformance report; known limits; NASA imagery credit; a table of which scene elements are computed and which are illustrative (ADR-0005 R17). | MUST |
 | WA-F14 | **Analytic overlay** (toggle): exact two-body trajectory as a dotted reference line plus an exact-position ghost marker at the current time, both from the analytic module, never from the integrator. | MUST |
 | WA-F15 | CSV export of the run (t, x, y, vx, vy in SI, full precision). | SHOULD |
 | WA-F16 | Pin a run as a faint comparison line. | COULD (first to cut) |
@@ -56,11 +56,12 @@ WA-F14 was added in rev 2. The WA-0 close-up render showed that on the V0 refere
 | WA-D2 | The spacecraft marker uses cubic Hermite interpolation between samples k and k+1, for display only. |
 | WA-D3 | The trajectory line is a subset of computed samples chosen by Ramer–Douglas–Peucker with ε = 100 m (vertex cap 20,000; ε doubles if needed and the achieved ε is reported). |
 | WA-D4 | **Past and future.** For bound orbits: computed past is drawn solid from the start of the current revolution; computed future is dashed to its end. Revolutions are counted at crossings of the +x axis, the same rule as `first_period`. For escape and impact: past solid from t = 0, future dashed to t_end. |
-| WA-D5 | The line is hidden where the Earth occludes it. |
+| WA-D5 | The line and the marker are hidden where the Earth occludes them. The only exception is the dashed, labelled behind-Earth indicator (ADR-0005 R12). |
 | WA-D6 | Lighting is camera-attached; there is no terminator, because no Sun is modelled. |
 | WA-D7 | Orbit elements shown as properties of the orbit (eccentricity, apsides, period) are closed-form values for the configured initial state, tagged *exact*. Run-measured values are labelled *run* and live under Advanced. |
 | WA-D8 | The velocity arrow and every other per-sample mark use sample k, like the readouts. |
 | WA-D9 | Numerical impact (cross, red) and analytical crossing (open diamond, cyan) never share a shape or a colour. |
+| WA-D10 | Simplification and interpolation preserve events and discrepancies: first and last samples, revolution boundaries, apsides, the impact sample and flag changes are always kept; the exact path and ghost marker are never decimated against the computed path (ADR-0005 R16). |
 
 ## 4. Evidence tiers (ADR-0008)
 
@@ -134,6 +135,7 @@ Plus, on all classes: first-route JS ≤ 300 KB gzip; fonts ≤ 120 KB; first Ea
 | WA-A9 | Works at 200% zoom; touch targets ≥ 44 × 44 px. |
 | WA-A10 | axe-core reports zero violations in every journey; VoiceOver and NVDA passes recorded at WA-6. |
 | WA-A11 | **Type minimums.** No text below 12 px anywhere; labels 14 px; values 15 px; captions and help 13 px; primary readouts 28 px in Explore and 22 px in Analyze. The mode switch is a radio group (`aria-checked`); the Advanced section is a native `<details>`. |
+| WA-A12 | **Mobile robustness.** Layouts work at 320 × 568, 360 × 640 and 390 × 844, and in landscape (e.g. 844 × 390); content respects `env(safe-area-inset-*)`; with the on-screen keyboard open, the focused field and its sheet stay visible (`visualViewport`), and the playback controls never cover an input. |
 
 ## 8. Errors, validation and security
 
@@ -167,6 +169,8 @@ AI tutoring, lessons, payments, accounts, server-side saved scenarios, mission p
 
 ## 11. Conformance (summary; detail in ADR-0003)
 
+Until the WA-2 conformance report exists and passes, every surface (methodology, evidence cards, README, release notes) shows browser-engine conformance as **Pending**, never as completed (G1-5).
+
 C1–C6 are the six presets; C7 the F4/F5 endpoint cases; C8 invalid inputs. Positions and velocities agree within 10⁻¹¹ relative; derived scalars within 10⁻¹²; statuses, step counts, classifications and error codes exactly. If one browser engine exceeds a bound, the cause is found first; bounds are never loosened to pass.
 
 ## Revision history
@@ -175,4 +179,5 @@ C1–C6 are the six presets; C7 the F4/F5 endpoint cases; C8 invalid inputs. Pos
 |---|---|---|
 | 1 | 2026-11-23 | Proposal rev 1 requirements (in the proposal document). |
 | 2 | 2026-11-23 | Finalized in WA-0: evidence tiers by exact match; v0.1.1 dependency; performance by size × device class; usability milestone; WA-F14 analytic overlay with ghost marker (from WA-0 render finding); WA-D4 past/future revolution rule; X1 uses dt = 1 s. |
+| 4 | 2026-11-25 | G1 approval and its non-blocking considerations: WA-A12 mobile robustness; WA-D5 behind-Earth exception; WA-D10 event-preserving simplification; WA-F13 computed vs illustrative; §11 conformance shown Pending until WA-2. |
 | 3 | 2026-11-24 | WA-0 design review: WA-F18 Explore/Analyze modes; WA-F19 velocity direction; WA-F7 diagnostics hierarchy with exact secondary elements; WA-F8 run values and the osculating-element rule; WA-F9 pending status; WA-F10 numerical impact vs analytical crossing with detail inset; WA-F5 marker ring and label; WA-A11 type minimums; J8. |

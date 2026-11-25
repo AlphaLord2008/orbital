@@ -1,6 +1,6 @@
 # ORBITAL Web Alpha — Design (WA-0)
 
-Status: **revision 2, awaiting gate G1** (your written approval). No production UI is built before it. PR #1 stays open until then.
+Status: **G1 passed, 2026-11-25.** Harshith Vaibhav approved, in writing, the desktop designs (Explore, Analyze, circular and elliptical orbits, impact and analytical comparison, escape, invalid-input and computing states, presentation mode, methodology page), mobile designs M1–M5, the visualization concept and the design system v2, after independent review with ChatGPT of the 12-page desktop export and the 7-page mobile and concept supplement. No further major design revisions are required. Production UI (WA-3 onward) builds to these designs.
 
 | Deliverable | Link | Notes |
 |---|---|---|
@@ -56,14 +56,26 @@ The rev-1 stills in `renders/` were made by `render_wa0.py` with `render.py` at 
 
 **Texture provenance.** The WA-0 stills used the NASA Blue Marble topography/bathymetry composite (4096 × 2048) as redistributed in the open-source three-globe project, because NASA's site was not reachable from the design environment. Production (WA-3) downloads the original from NASA Visible Earth, checks it, and credits "NASA Earth Observatory".
 
-## G1 review checklist (revision 2)
+## G1 review checklist (revision 2) — passed 2026-11-25
 
-- [ ] Explore feels uncluttered for a first-time student; Analyze has everything an engineer needs
-- [ ] Mode switch keeps the same run, time and camera
-- [ ] All panel text readable at 100% zoom; nothing below 12 px
-- [ ] Spacecraft findable at a glance on every screen, including mobile
-- [ ] Diagnostics hierarchy and "exact" tagging acceptable
-- [ ] Completed vs Pending is unmistakable
-- [ ] Numerical impact vs analytical crossing is unmistakable
-- [ ] Methodology reads as an editorial page with all science intact
-- [ ] Mobile main, controls, diagnostics and playback acceptable
+- [x] Explore feels uncluttered for a first-time student; Analyze has everything an engineer needs
+- [x] Mode switch keeps the same run, time and camera
+- [x] All panel text readable at 100% zoom; nothing below 12 px
+- [x] Spacecraft findable at a glance on every screen, including mobile
+- [x] Diagnostics hierarchy and "exact" tagging acceptable
+- [x] Completed vs Pending is unmistakable
+- [x] Numerical impact vs analytical crossing is unmistakable
+- [x] Methodology reads as an editorial page with all science intact
+- [x] Mobile main, controls, diagnostics and playback acceptable
+
+## Non-blocking implementation considerations recorded at G1
+
+These do not change the approved designs. Each is assigned to the place that enforces it.
+
+| # | Consideration | Enforced by | Verified in |
+|---|---|---|---|
+| G1-1 | Test mobile layouts on smaller screens, in landscape, with browser safe areas and with the on-screen keyboard open | requirements WA-A12 | WA-6 (Playwright device matrix + real phone) |
+| G1-2 | Trajectory simplification and visual interpolation must preserve scientifically important events and discrepancies | ADR-0005 R16; requirements WA-D10 | WA-4 property tests |
+| G1-3 | The dashed behind-Earth spacecraft indicator is an intentional, labelled exception to normal occlusion | ADR-0005 R12; requirements WA-D5 | WA-4 occlusion test scene |
+| G1-4 | Distinguish computed physics from illustrative rendering elements | ADR-0005 R17; requirements WA-F13 | WA-5 methodology page and Data view |
+| G1-5 | Do not present browser-engine validation as completed until WA-2 conformance passes | requirements §11 | WA-2 report; WA-5 evidence UI |
