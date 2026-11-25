@@ -1,0 +1,298 @@
+{
+ "d1_explore": {
+  "axis_x": [
+   558.8,
+   1098.8
+  ],
+  "axis_y": [
+   2003.9,
+   1318.6
+  ],
+  "marker": [
+   2019.8,
+   1016.6
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1440.0,
+   860.0
+  ],
+  "sample_k": 1851
+ },
+ "d1_analyze": {
+  "axis_x": [
+   639.0,
+   1092.8
+  ],
+  "axis_y": [
+   1920.5,
+   1283.7
+  ],
+  "marker": [
+   1942.8,
+   1020.1
+  ],
+  "marker_visible": true,
+  "velocity_tip": [
+   2013.7,
+   938.6
+  ],
+  "earth_center": [
+   1424.0,
+   880.0
+  ],
+  "sample_k": 1851
+ },
+ "d8_present": {
+  "axis_x": [
+   595.8,
+   1092.2
+  ],
+  "axis_y": [
+   2252.6,
+   1350.7
+  ],
+  "marker": [
+   2257.1,
+   997.5
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1600.0,
+   820.0
+  ],
+  "sample_k": 1851
+ },
+ "m1_explore": {
+  "axis_x": [
+   -1.0,
+   746.0
+  ],
+  "axis_y": [
+   635.5,
+   839.6
+  ],
+  "marker": [
+   649.1,
+   710.0
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   390.0,
+   640.0
+  ],
+  "sample_k": 1851
+ },
+ "m4_playback": {
+  "axis_x": [
+   -1.0,
+   706.0
+  ],
+  "axis_y": [
+   635.5,
+   799.6
+  ],
+  "marker": [
+   541.3,
+   505.7
+  ],
+  "marker_visible": false,
+  "earth_center": [
+   390.0,
+   600.0
+  ],
+  "sample_k": 3130
+ },
+ "d2_e1": {
+  "axis_x": [
+   2307.4,
+   782.2
+  ],
+  "axis_y": [
+   1451.8,
+   339.7
+  ],
+  "marker": [
+   981.0,
+   549.6
+  ],
+  "marker_visible": true,
+  "velocity_tip": [
+   891.7,
+   610.3
+  ],
+  "periapsis": [
+   2076.4,
+   807.7
+  ],
+  "apoapsis": [
+   748.7,
+   956.7
+  ],
+  "earth_center": [
+   1562.7,
+   864.6
+  ],
+  "sample_k": 2600
+ },
+ "m3_e1": {
+  "axis_x": [
+   757.5,
+   289.3
+  ],
+  "axis_y": [
+   401.8,
+   99.7
+  ],
+  "marker": [
+   203.4,
+   190.8
+  ],
+  "marker_visible": true,
+  "periapsis": [
+   661.0,
+   300.0
+  ],
+  "apoapsis": [
+   111.7,
+   361.6
+  ],
+  "earth_center": [
+   447.5,
+   323.6
+  ],
+  "sample_k": 2600
+ },
+ "d3_k111": {
+  "axis_x": [
+   2298.6,
+   783.1
+  ],
+  "axis_y": [
+   1461.1,
+   349.5
+  ],
+  "marker": [
+   1001.1,
+   531.9
+  ],
+  "marker_visible": true,
+  "velocity_tip": [
+   908.7,
+   587.7
+  ],
+  "earth_center": [
+   1570.9,
+   863.7
+  ],
+  "sample_k": 2600
+ },
+ "d4_impact": {
+  "axis_x": [
+   382.1,
+   1160.0
+  ],
+  "axis_y": [
+   1949.6,
+   1454.4
+  ],
+  "marker": [
+   1947.6,
+   1079.2
+  ],
+  "marker_visible": false,
+  "impact": [
+   1947.6,
+   1079.2
+  ],
+  "crossing": [
+   1951.2,
+   1074.8
+  ],
+  "start": [
+   716.6,
+   1071.0
+  ],
+  "earth_center": [
+   1360.0,
+   900.0
+  ],
+  "sample_k": 1810
+ },
+ "d4_inset": {
+  "marker": [
+   443.1,
+   335.5
+  ],
+  "marker_visible": false,
+  "impact": [
+   443.1,
+   335.5
+  ],
+  "crossing": [
+   516.7,
+   324.6
+  ],
+  "earth_center": [
+   212.1,
+   -958.5
+  ],
+  "sample_k": 1810
+ },
+ "d5_geo": {
+  "axis_x": [
+   1323.6,
+   929.3
+  ],
+  "axis_y": [
+   1577.9,
+   917.8
+  ],
+  "marker": [
+   2192.8,
+   984.8
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1440.0,
+   860.0
+  ],
+  "sample_k": 2671
+ },
+ "d6_escape": {
+  "axis_x": [
+   1004.9,
+   1047.3
+  ],
+  "axis_y": [
+   1265.4,
+   938.6
+  ],
+  "marker": [
+   1976.1,
+   500.4
+  ],
+  "marker_visible": true,
+  "earth_center": [
+   1080.0,
+   900.0
+  ],
+  "sample_k": 10800
+ },
+ "c1_closeup": {
+  "marker": [
+   788.5,
+   500.8
+  ],
+  "marker_visible": true,
+  "exact_now": [
+   816.7,
+   498.9
+  ],
+  "earth_center": [
+   373.4,
+   -399.3
+  ],
+  "sample_k": 2776
+ }
+}

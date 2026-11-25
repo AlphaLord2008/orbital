@@ -2,6 +2,8 @@
 
 Usage:  ORBITAL_EARTH_TEXTURE=/path/to/blue-marble.jpg python scripts/design/render_wa0.py OUT_DIR
 Design tooling only; not product code and not a validation runner.
+Note (2026-11-24): render.py rev 2 sizes strokes and markers in CSS px, so this script no longer
+reproduces the rev-1 stills bit for bit. Use render.py from commit fe8dd4a for that.
 """
 import json, math, sys
 from pathlib import Path
