@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Status** | **Provisionally accepted** (2026-11-23), decision D7. Revision 2 (WA-1, 2026-11-25): product chosen (Workers Static Assets) and the documentation checks in §3 done. Becomes **Accepted** when the remaining account-side checks in §3 pass on a real deployment. |
+| **Status** | **Accepted** (2026-11-25, WA-1), decision D7. Every check in §3 passed on real deployments; the custom domain is deferred to before WA-8. |
 | **Date** | 2026-11-23 |
 | **Decider** | Harshith Vaibhav |
 | **Advisors** | Claude; ChatGPT (review) |
@@ -46,9 +46,9 @@ Trade-offs accepted: Version URLs are public (fine for a public repository and a
 | Terms allow a free-plan site that may later become commercial | **Done (documentation).** The Self-Serve Subscription Agreement (updated 2025-09-12) has no personal or non-commercial restriction; it lets Cloudflare end Free Services at its discretion and forbids undue burden on the network. Risk accepted: no SLA on Free. | cloudflare.com/terms |
 | Pages vs Workers Static Assets chosen, reason recorded | **Done.** Workers Static Assets (§1a) | this ADR |
 | Largest asset under the per-file cap; file and build limits | **Done (limits).** 25 MiB per file, 20,000 files on Free; no build minutes used. The 8K texture's size is measured in WA-3 and must stay under 25 MiB. | Workers limits page |
-| Header rules support the CSP and caching below | **Done locally, pending on Cloudflare.** `web/apps/web/public/_headers`; enforced in Playwright under the same rules locally; the deploy workflow checks the served headers with `curl` | e2e `smoke.spec.ts`; deploy job log |
-| Temporary domain and HTTPS; preview deploys from Actions | **Pending: needs the Cloudflare account, `workers.dev` subdomain and API token** (`docs/deploy.md`) | first deploy run |
-| Rollback rehearsed | **Pending** (after the first two deploys) | rollback run log |
+| Header rules support the CSP and caching below | **Passed on Cloudflare.** All six security headers and both caching rules served as written; e2e (zero CSP violations, CSP enforced, axe) passes against the live URLs | Deploy runs 45711741434 (preview), 45712039445 (production) |
+| Temporary domain and HTTPS; preview deploys from Actions | **Passed.** Production `https://orbital-web.harshuvaibhav.workers.dev`; PR preview `https://pr-2-orbital-web.harshuvaibhav.workers.dev`. The `workers.dev` subdomain already existed; no manual registration needed. Token scope used: Workers Scripts Edit + Account Settings Read, one account | Deploy runs 45711317381, 45711741434 |
+| Rollback rehearsed | **Passed** both ways: production `7d353ef9` → `c03f930f` (served bundle changed `index-TJX_3Go5.js` → `index-BwQ6K86h.js`) → `7d353ef9` (back to `index-TJX_3Go5.js`) | Deploy runs 45712365837 (logs deleted, see below), 45712559926 |
 | Custom domain | **Deferred** to before WA-8 (temporary domain approved 2026-11-25) | roadmap |
 
 If any item fails, take the next option in §1 and record why.
@@ -75,4 +75,5 @@ About $10–15/year for the domain. Everything else is $0 at Web Alpha scale.
 | Rev | Date | Change |
 | --- | --- | --- |
 | 1 | 2026-11-23 | Provisionally accepted. |
-| 2 | 2026-11-25 | WA-1: Workers Static Assets chosen over Pages; documentation checks done; temporary workers.dev domain; deploy, header check, Lighthouse and rollback workflows. Account-side checks pending. |
+| 2 | 2026-11-25 | WA-1: Workers Static Assets chosen over Pages; documentation checks done; temporary workers.dev domain; deploy, header check, Lighthouse and rollback workflows. |
+| 3 | 2026-11-25 | Accepted: first deploys, preview URL, live header, e2e and Lighthouse checks, and rollback rehearsal all passed. `wrangler deployments list` removed from the workflow because it prints the account e-mail into public Actions logs; the one affected run's logs were deleted. |

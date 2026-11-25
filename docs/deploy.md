@@ -1,9 +1,10 @@
 # Deploying ORBITAL Web Alpha
 
 Hosting: Cloudflare Workers Static Assets, assets only, Free plan (ADR-0006 rev 2).
-Temporary production domain until the custom domain is chosen: `https://orbital-web.<your-subdomain>.workers.dev`.
+Production (temporary domain until the custom domain is chosen): **https://orbital-web.harshuvaibhav.workers.dev**
+PR previews: `https://pr-<n>-orbital-web.harshuvaibhav.workers.dev` (sent with `x-robots-tag: noindex`, so Lighthouse SEO reads 63 there; production reads 100).
 
-## One-time setup (Harshith, about 10 minutes)
+## One-time setup (done 2026-11-25)
 
 These steps need your own Cloudflare login, so Claude cannot do them.
 
@@ -28,7 +29,13 @@ Never commit the token. It belongs only in GitHub secrets.
 
 Without the secrets, the Deploy workflow runs but every job is skipped with a notice. CI is unaffected.
 
-## Rollback rehearsal (once, to close ADR-0006)
+## Rolling back
+
+Use **Actions → Deploy → Run workflow**, choose action `rollback` and paste a version ID; the run prints which bundle production serves afterwards. To deploy any ref to production by hand (also how the Worker was first created), run it with action `deploy` on that ref. Rehearsed 2026-11-25 (ADR-0006 §3).
+
+Don't add `wrangler deployments list` to the workflow: its output includes the account e-mail, and Actions logs on this public repository are public.
+
+## Original rehearsal procedure
 
 1. After two production deploys exist, list the versions with `npx wrangler versions list --name orbital-web`. You can also get it from **Workers & Pages → orbital-web → Deployments**.
 2. Run **Actions → Deploy → Run workflow** with the older version ID.
