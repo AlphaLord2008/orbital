@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Exact versions only (ADR-0007: versions pinned exactly).
+saveExact: true
+
+# Supply-chain guard: never install a version published less than 7 days ago
+# (direct or transitive). Versions are chosen to satisfy this; no exclusions.
+minimumReleaseAge: 10080

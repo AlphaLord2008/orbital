@@ -12,7 +12,8 @@ The long-term goal is an interactive environment for learning orbital mechanics:
 | --- | --- |
 | 0.0 Planning: requirements, architecture decisions | Complete |
 | 0.1 First Orbit: validated 2D two-body propagator | **Released (v0.1.0)** |
-| 0.2 Numerical reliability: integrator comparison | Planned, not started |
+| Web Alpha: browser simulator (TypeScript engine in a Web Worker, validated against this Python package) | **In development:** WA-0 design complete; WA-1 scaffold, CI and hosting in progress ([roadmap](docs/roadmap-web-alpha.md)) |
+| 0.2 Numerical reliability: integrator comparison | Planned, after Web Alpha |
 
 ## What 0.1 does
 
@@ -69,6 +70,7 @@ print(specific_energy(trajectory.r, trajectory.v)[-1])     # J/kg
 - [`docs/reference-values.md`](docs/reference-values.md): reference values for a 400 km circular orbit.
 - [`docs/validation/v0.1-circular-orbit.md`](docs/validation/v0.1-circular-orbit.md): validation report.
 - [`docs/releases/v0.1.0.md`](docs/releases/v0.1.0.md): release notes.
+- [`docs/requirements-web-alpha.md`](docs/requirements-web-alpha.md), [`docs/roadmap-web-alpha.md`](docs/roadmap-web-alpha.md), [`docs/design/`](docs/design/), [`docs/deploy.md`](docs/deploy.md): Web Alpha.
 
 ## Repository layout
 
@@ -76,8 +78,11 @@ print(specific_energy(trajectory.r, trajectory.v)[-1])     # J/kg
 src/orbital/   physics engine package (NumPy only; no I/O or plotting)
 scripts/       reference-case script: metrics report and plot (Matplotlib)
 tests/         pytest test suite
-docs/          requirements, decisions, reference values, validation, releases
+docs/          requirements, decisions, reference values, validation, releases, design
+web/           Web Alpha pnpm workspace: @orbital/engine and the app (Node 26, pnpm 12)
 ```
+
+Web Alpha development: `cd web && pnpm install && pnpm build && pnpm test` (see [`docs/deploy.md`](docs/deploy.md) for hosting).
 
 ## License
 

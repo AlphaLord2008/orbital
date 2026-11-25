@@ -1,0 +1,32 @@
+{
+  "name": "orbital-web",
+  "private": true,
+  "description": "ORBITAL Web Alpha workspace (ADR-0007). The Python package at the repository root stays the authoritative physics implementation (ADR-0003).",
+  "type": "module",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=26.13.1 <27"
+  },
+  "scripts": {
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "lint": "eslint --max-warnings 0 .",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "vitest run",
+    "check:boundary": "node scripts/check-engine-boundary.mjs",
+    "build": "pnpm --filter @orbital/web run build",
+    "size": "pnpm --filter @orbital/web run size",
+    "e2e": "pnpm --filter @orbital/web run e2e"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.6.6",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.14.0",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.73.0",
+    "vitest": "5.1.1"
+  }
+}

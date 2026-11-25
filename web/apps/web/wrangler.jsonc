@@ -1,0 +1,14 @@
+// Cloudflare Workers Static Assets, assets only: no Worker script runs, so every request is a
+// static-asset request ("free and unlimited" on the Free plan). ADR-0006 rev 2.
+{
+  "name": "orbital-web",
+  "compatibility_date": "2026-11-25",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+  // Temporary deployment domain: https://orbital-web.<account-subdomain>.workers.dev
+  // Per-PR Version URLs: https://pr-<n>-orbital-web.<account-subdomain>.workers.dev
+  "workers_dev": true,
+  "preview_urls": true,
+}

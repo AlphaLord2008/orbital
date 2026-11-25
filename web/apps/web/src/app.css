@@ -1,0 +1,43 @@
+/* WA-1 shell. Colours and type follow the approved design system tokens (docs/design/tokens.json):
+   bg-space #0b0e13, text-primary #e6e9ef, text-secondary #9aa3b2. Plex fonts are self-hosted from WA-5. */
+:root {
+  color-scheme: dark;
+  background: #0b0e13;
+  color: #e6e9ef;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.shell {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.shell__title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.shell__meta {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #9aa3b2;
+}

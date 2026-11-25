@@ -1,0 +1,3 @@
+# Standalone spike (not in the web workspace).
+saveExact: true
+minimumReleaseAge: 10080

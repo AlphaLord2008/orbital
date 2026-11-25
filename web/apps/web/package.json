@@ -1,0 +1,32 @@
+{
+  "name": "@orbital/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ORBITAL Web Alpha application. WA-1: strict TypeScript shell only; no product UI before WA-3.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "serve": "node ../../scripts/serve-dist.mjs dist 4173",
+    "size": "size-limit",
+    "e2e": "playwright test",
+    "lhci": "lhci autorun"
+  },
+  "dependencies": {
+    "@orbital/engine": "workspace:*",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@lhci/cli": "0.16.1",
+    "@playwright/test": "1.65.1",
+    "@size-limit/file": "14.3.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "size-limit": "14.3.0",
+    "vite": "8.3.8"
+  }
+}
