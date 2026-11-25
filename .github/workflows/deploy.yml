@@ -34,6 +34,8 @@ concurrency:
 
 env:
   WRANGLER_VERSION: 4.165.0
+  # Temporary production domain (ADR-0006 rev 2); public, not a secret.
+  PROD_URL: https://orbital-web.harshuvaibhav.workers.dev
 
 jobs:
   deploy:
@@ -68,6 +70,9 @@ jobs:
           [ -n "${{ inputs.version_id }}" ] || { echo "::error::version_id is required for rollback"; exit 1; }
           npx --yes "wrangler@${WRANGLER_VERSION}" rollback "${{ inputs.version_id }}" \
             --name orbital-web --message "Rollback via GitHub Actions by ${{ github.actor }}"
+          npx --yes "wrangler@${WRANGLER_VERSION}" deployments list --name orbital-web | tail -n 25
+          sleep 10
+          echo "Production now serves: $(curl -sSf "$PROD_URL/" | grep -Eo '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
 
       - if: steps.creds.outputs.ok == 'true' && inputs.action != 'rollback'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -123,11 +128,34 @@ jobs:
           echo "Headers OK on $URL"
 
       - if: steps.creds.outputs.ok == 'true' && inputs.action != 'rollback'
+        name: E2E smoke against the deployed version (CSP violations, headers, axe)
+        working-directory: web/apps/web
+        env:
+          ORBITAL_BASE_URL: ${{ steps.preview.outputs.url || steps.prod.outputs.url }}
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm exec playwright test --project=chromium
+
+      - if: steps.creds.outputs.ok == 'true' && inputs.action != 'rollback'
         name: Lighthouse on the deployed version
         working-directory: web/apps/web
         env:
           URL: ${{ steps.preview.outputs.url || steps.prod.outputs.url }}
-        run: pnpm exec lhci autorun --config=lighthouserc.preview.json --collect.url="$URL/"
+        run: |
+          pnpm exec lhci autorun --config=lighthouserc.preview.json --collect.url="$URL/"
+          node -e '
+            const fs = require("fs");
+            const files = fs.readdirSync(".lighthouseci-preview").filter((f) => /\.report\.json$/.test(f) || /^lhr-.*\.json$/.test(f));
+            const rows = files.map((f) => {
+              const r = JSON.parse(fs.readFileSync(".lighthouseci-preview/" + f, "utf8"));
+              const c = r.categories, a = r.audits;
+              const s = (k) => Math.round(c[k].score * 100);
+              return `| ${s("performance")} | ${s("accessibility")} | ${s("best-practices")} | ${s("seo")} | ${Math.round(a["largest-contentful-paint"].numericValue)} ms | ${a["cumulative-layout-shift"].numericValue} | ${Math.round(a["total-blocking-time"].numericValue)} ms |`;
+            });
+            const out = ["### Lighthouse: " + process.env.URL, "| Perf | A11y | Best practices | SEO | LCP | CLS | TBT |", "|---|---|---|---|---|---|---|", ...new Set(rows)].join("\n");
+            console.log(out);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, out + "\n");
+          '
 
       - if: always() && steps.creds.outputs.ok == 'true' && inputs.action != 'rollback'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
