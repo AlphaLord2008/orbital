@@ -17,3 +17,6 @@ export const ENGINE_PACKAGE = '@orbital/engine';
  * `null` until the WA-2 conformance report passes; the UI must then say "Pending" (G1-5).
  */
 export const CONFORMS_TO_PYTHON: string | null = null;
+
+import * as THREE from 'three';
+export const _leak = (): string => String(THREE) + document.title;
