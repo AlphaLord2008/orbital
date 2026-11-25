@@ -70,7 +70,7 @@ jobs:
           [ -n "${{ inputs.version_id }}" ] || { echo "::error::version_id is required for rollback"; exit 1; }
           npx --yes "wrangler@${WRANGLER_VERSION}" rollback "${{ inputs.version_id }}" \
             --name orbital-web --message "Rollback via GitHub Actions by ${{ github.actor }}"
-          npx --yes "wrangler@${WRANGLER_VERSION}" deployments list --name orbital-web | tail -n 25
+          # Not `deployments list`: its output includes the account e-mail, and these logs are public.
           sleep 10
           echo "Production now serves: $(curl -sSf "$PROD_URL/" | grep -Eo '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)"
 
