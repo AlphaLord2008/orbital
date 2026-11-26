@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 import os
+import platform
 import sys
 from pathlib import Path
 
@@ -74,6 +75,12 @@ NUMPY_VERSION = "2.5.5"
 
 
 def check_environment():
+    if platform.machine().lower() not in ("x86_64", "amd64"):
+        sys.exit(
+            "generate_fixtures: fixtures are generated on x86-64 only (OpenBLAS Haswell kernel; see "
+            "docs/validation/floating-point.md). Nothing else needs this: tests, the engine and the web "
+            "app run anywhere. On Apple Silicon use CI, or: docker run --platform linux/amd64 ..."
+        )
     problems = []
     if os.environ.get("OPENBLAS_CORETYPE") != BLAS_KERNEL:
         problems.append(f"set OPENBLAS_CORETYPE={BLAS_KERNEL}")
