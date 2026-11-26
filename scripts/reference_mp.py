@@ -198,7 +198,7 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     for case in CASES.values():
         record = build(case)
-        (out / f"{case.id}.json").write_text(json.dumps(record, indent=1) + "\n")
+        (out / f"{case.id}.json").write_text(json.dumps(record, indent=1, allow_nan=False) + "\n")
         print(f"{case.id}: {len(record['states'])} reference states")
 
 

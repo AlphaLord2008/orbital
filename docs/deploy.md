@@ -31,9 +31,18 @@ Without the secrets, the Deploy workflow runs but every job is skipped with a no
 
 ## Rolling back
 
-Use **Actions → Deploy → Run workflow**, choose action `rollback` and paste a version ID; the run prints which bundle production serves afterwards. To deploy any ref to production by hand (also how the Worker was first created), run it with action `deploy` on that ref. Rehearsed 2026-11-25 (ADR-0006 §3).
+Use **Actions → Deploy → Run workflow**, choose action `rollback` and paste a version ID (from **Workers & Pages → orbital-web → Deployments**, or `npx wrangler versions list` on your own machine, never in CI); the run prints which bundle production serves afterwards. To deploy any ref to production by hand (also how the Worker was first created), run it with action `deploy` on that ref. Rehearsed 2026-11-25 (ADR-0006 §3).
 
-Don't add `wrangler deployments list` to the workflow: its output includes the account e-mail, and Actions logs on this public repository are public.
+## Public-log privacy
+
+Actions logs on this public repository are public. Two rules, both enforced by the CI job "Deploy log privacy guard" (`web/scripts/check-workflow-privacy.sh`):
+
+- No account-listing wrangler commands in workflows (`whoami`, `deployments list|status`, `versions list|view`, `secret list`). They print the account e-mail.
+- Every wrangler call is piped through `web/scripts/redact-log.sh`, which replaces e-mail addresses. Workflow inputs reach scripts through `env`, never `${{ }}` inside `run`.
+
+Secrets are masked by GitHub; the account ID is a secret, so it is masked too.
+
+**Incident 2026-11-25.** The first rollback rehearsal ran `wrangler deployments list`, which printed the Cloudflare account e-mail into the public log of run 45712365837. No credentials were exposed. The run's logs were deleted through the API the same day (verified: 404), the command was removed (ee1c121), and the two rules above were added in WA-2.
 
 ## Original rehearsal procedure
 

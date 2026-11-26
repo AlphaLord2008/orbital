@@ -9,7 +9,9 @@ import orbital
 
 
 def test_package_imports_with_version():
-    assert orbital.__version__ == "0.1.0"
+    # The one v0.1.0 test changed for v0.1.1: it pins the release version string, and
+    # requirements-0.1.1 PR-6 requires 0.1.1. See docs/releases/v0.1.1.md.
+    assert orbital.__version__ == "0.1.1"
 
 
 def test_python_meets_minimum_version():

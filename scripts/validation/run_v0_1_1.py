@@ -218,6 +218,9 @@ def git_commit():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--pilot", action="store_true", help="run unregistered look-alikes only")
+    parser.add_argument(
+        "--check", action="store_true", help="CI rerun of the registered cases: write nothing, exit 1 on any FAIL"
+    )
     parser.add_argument("--out", default=str(ROOT / "docs" / "validation" / "v0.1.1-results.json"))
     args = parser.parse_args()
     cases = PILOTS if args.pilot else CASES
@@ -245,6 +248,10 @@ def main():
     if args.pilot:
         print("pilot run: results not written")
         return
+    if args.check:
+        failed = [cid for cid, c in results["cases"].items() if not c["pass"]]
+        print(f"check: {len(cases) - len(failed)}/{len(cases)} cases pass; registered results not rewritten")
+        sys.exit(1 if failed else 0)
     Path(args.out).write_text(json.dumps(results, indent=1, default=float) + "\n")
     print(f"wrote {args.out}")
 

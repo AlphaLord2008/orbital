@@ -1,0 +1,300 @@
+{
+ "schema": 1,
+ "case": "C8",
+ "description": "invalid inputs: same error class and field",
+ "engine": {
+  "impl": "orbital-py",
+  "version": "0.1.1",
+  "source_sha256": "bcad47d9d04b0ead9a9b918a9a4e3d803f7372c1fcdea6b7503dae7c0cc8de59"
+ },
+ "rows": [
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     "nan",
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "r0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     "inf",
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "r0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     "nan"
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "v0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     1.0,
+     2.0,
+     3.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "r0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     1.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "v0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 0.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "dt"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": -1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "dt"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": "inf",
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "dt"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": true,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "dt"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 0
+   },
+   "error": "ValueError",
+   "field": "n_steps"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": true
+   },
+   "error": "ValueError",
+   "field": "n_steps"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 2.5
+   },
+   "error": "ValueError",
+   "field": "n_steps"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6378137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10
+   },
+   "error": "ValueError",
+   "field": "r0"
+  },
+  {
+   "fn": "propagate",
+   "args": {
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.0
+    ],
+    "dt": 1.0,
+    "n_steps": 10,
+    "mu": -1.0
+   },
+   "error": "ValueError",
+   "field": "mu"
+  },
+  {
+   "fn": "gravity_accel",
+   "args": {
+    "r": [
+     0.0,
+     0.0
+    ]
+   },
+   "error": "ValueError",
+   "field": "r"
+  },
+  {
+   "fn": "gravity_accel",
+   "args": {
+    "r": [
+     true,
+     false
+    ]
+   },
+   "error": "ValueError",
+   "field": "r"
+  },
+  {
+   "fn": "steps_for_duration",
+   "args": {
+    "duration": 1.0,
+    "dt": 2.0
+   },
+   "error": "ValueError",
+   "field": "duration"
+  },
+  {
+   "fn": "steps_for_duration",
+   "args": {
+    "duration": "nan",
+    "dt": 1.0
+   },
+   "error": "ValueError",
+   "field": "duration"
+  },
+  {
+   "fn": "steps_for_duration",
+   "args": {
+    "duration": 10.0,
+    "dt": 0.0
+   },
+   "error": "ValueError",
+   "field": "dt"
+  }
+ ]
+}
