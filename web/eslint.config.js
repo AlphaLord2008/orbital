@@ -53,6 +53,11 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
+    // Tests index typed arrays heavily; a non-null assertion there fails loudly anyway.
+    files: ['**/*.test.{ts,tsx}'],
+    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+  },
+  {
     // Engine boundary (ADR-0003): no React, three, DOM-facing or app imports; no packages at all.
     files: ['packages/engine/src/**/*.ts'],
     rules: {

@@ -32,7 +32,7 @@ test('shell renders with the build commit and engine conformance', async ({ page
   await expect(
     page.getByText(/Web Alpha · build [0-9a-f]{7}|Web Alpha · build unknown/),
   ).toBeVisible();
-  await expect(page.getByText('Browser engine conformance: Python orbital 0.1.1')).toBeVisible();
+  await expect(page.getByText(/browser engine conformance: Python orbital 0\.1\.1/)).toBeVisible();
 
   expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
@@ -68,4 +68,23 @@ test('no automatically detectable accessibility violations (axe)', async ({ page
   await page.goto('/');
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test('the worker computes the ISS preset and the readouts show sample values (J1)', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await watchCsp(page);
+  await page.goto('/');
+  // J1: orbit visible within 3 s on class A (CI runners are slower; the budget is measured in WA-6).
+  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 10_000 });
+  await expect(
+    page.getByRole('img', { name: /Orbit view: bound orbit, completed, 55,537 computed samples/ }),
+  ).toBeVisible();
+  await page.getByLabel('Preset').selectOption('I1');
+  await expect(page.getByText('Bound · reaches the surface')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/until impact/)).toBeVisible();
+  expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
+  expect(errors).toEqual([]);
 });
