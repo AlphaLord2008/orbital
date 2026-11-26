@@ -24,6 +24,7 @@ from orbital.diagnostics import (
     speed,
 )
 from orbital.propagate import Trajectory, propagate, steps_for_duration
+from orbital import analytic
 
 __version__ = "0.1.0"
 
@@ -31,6 +32,7 @@ __all__ = [
     "MU_EARTH",
     "R_EARTH",
     "Trajectory",
+    "analytic",
     "angular_momentum_z",
     "circular_initial_state",
     "circular_velocity",
