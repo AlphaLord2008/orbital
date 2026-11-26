@@ -3,7 +3,7 @@
  * authoritative Python engine (scripts/generate_fixtures.py).
  *   position, velocity, per-sample energy and h:  relative <= 1e-11
  *   derived scalars (elements, period, first period, time to surface): relative <= 1e-12
- *   drift statistics (max relative energy and h drift): absolute <= 1e-11. They are
+ *   drift statistics (max relative energy and h drift): absolute <= 1e-11 (ADR-0003 §4a). They are
  *     differences of per-sample values, so a 1e-13 roundoff difference in a sample is a
  *     1e-13 absolute difference here, not a small relative one.
  *   status, sample count, steps, classification, error class and field: exact.
