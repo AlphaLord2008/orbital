@@ -79,9 +79,8 @@ test('the worker computes the ISS preset and the readouts show sample values (J1
   await page.goto('/');
   // J1: orbit visible within 3 s on class A (CI runners are slower; the budget is measured in WA-6).
   await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 10_000 });
-  await expect(
-    page.getByRole('img', { name: /Orbit view: bound orbit, completed, 55,537 computed samples/ }),
-  ).toBeVisible();
+  // The 3D view itself is tested in render.spec.ts (it needs WebGL 2); this test needs only the worker.
+  await expect(page.locator('main')).toHaveAttribute('data-run-steps', '55536');
   await page.getByLabel('Preset').selectOption('I1');
   await expect(page.getByText('Bound · reaches the surface')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/until impact/)).toBeVisible();
