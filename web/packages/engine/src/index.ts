@@ -43,4 +43,4 @@ export const ENGINE_VERSION = '0.1.1';
  * The Python release this engine has been shown to conform to. Set only when C1–C8 and
  * the analytic validation pass in all four environments; the UI says "Pending" while null (G1-5).
  */
-export const CONFORMS_TO_PYTHON: string | null = null;
+export const CONFORMS_TO_PYTHON: string | null = '0.1.1'; // C1–C8 + TS analytic validation: Node, Chromium, Firefox, WebKit (CI, 90f8bc6)
