@@ -9,8 +9,7 @@ import {
   ShaderMaterial,
   SphereGeometry,
   SRGBColorSpace,
-  type Texture,
-  TextureLoader,
+  Texture,
   type WebGLRenderer,
 } from 'three';
 import earth2k from '../assets/earth-2k.jpg?url';
@@ -62,6 +61,30 @@ function wantsHighRes(): boolean {
   return !small && (mem === undefined || mem >= 4);
 }
 
+/**
+ * Load an image and decode it before it reaches WebGL. `decode()` lets the browser decode the JPEG
+ * off the main thread, so the texture upload does not also pay for decoding. Same pixels, same
+ * colour handling as TextureLoader; falls back to the load event where decode() is unavailable or fails.
+ */
+function loadDecoded(url: string, onReady: (tex: Texture) => void): void {
+  const img = new Image();
+  img.decoding = 'async';
+  const done = () => {
+    const tex = new Texture(img);
+    tex.needsUpdate = true;
+    onReady(tex);
+  };
+  img.src = url;
+  if (typeof img.decode === 'function') {
+    img.decode().then(done, () => {
+      if (img.complete && img.naturalWidth > 0) done();
+      else img.addEventListener('load', done, { once: true });
+    });
+  } else {
+    img.addEventListener('load', done, { once: true });
+  }
+}
+
 export interface Earth {
   readonly mesh: Mesh;
   /** Rotate to simulation time t [s]. */
@@ -81,7 +104,6 @@ export function createEarth(renderer: WebGLRenderer, onTexture: () => void): Ear
   });
   const mesh = new Mesh(geometry, material);
   mesh.visible = false; // until the first texture arrives: never an untextured sphere
-  const loader = new TextureLoader();
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const textures: Texture[] = [];
   let disposed = false;
@@ -95,9 +117,9 @@ export function createEarth(renderer: WebGLRenderer, onTexture: () => void): Ear
     mesh.visible = true;
     onTexture();
   };
-  loader.load(earth2k, (tex) => {
+  loadDecoded(earth2k, (tex) => {
     apply(tex);
-    if (wantsHighRes()) loader.load(earth4k, apply);
+    if (wantsHighRes()) loadDecoded(earth4k, apply);
   });
   return {
     mesh,
