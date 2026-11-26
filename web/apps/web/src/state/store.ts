@@ -14,6 +14,8 @@ interface State {
   result: RunResult | null;
   computing: { done: number; total: number } | null;
   error: string | null;
+  /** Input → updated orbit for the last run [ms] (WA-N2), and whether it came from the cache. */
+  lastRun: { ms: number; cached: boolean; steps: number; seq: number } | null;
   /** Playback time [s] and transport. */
   t: number;
   playing: boolean;
@@ -48,6 +50,7 @@ export const useStore = create<State>()((set, get) => ({
   result: null,
   computing: null,
   error: null,
+  lastRun: null,
   t: 0,
   playing: !reducedMotion, // WA-A7: paused on load under reduced motion
   rate: 600,
@@ -65,16 +68,28 @@ export const useStore = create<State>()((set, get) => ({
       set({ computing: null, error: b.message });
       return;
     }
+    const requested = performance.now();
     client.run(b.run, {
       onProgress: (done, total) => {
         set({ computing: { done, total } });
       },
-      onResult: (result) => {
+      onResult: (result, cached) => {
         const prev = get().result;
         // Keep playback time when the new run still contains it; otherwise restart.
         const t = prev && get().t <= result.tEnd ? get().t : 0;
         const fit = get().fitOnResult;
-        set({ result, computing: null, t, fitOnResult: false });
+        set({
+          result,
+          computing: null,
+          t,
+          fitOnResult: false,
+          lastRun: {
+            ms: performance.now() - requested,
+            cached,
+            steps: result.run.nSteps,
+            seq: (get().lastRun?.seq ?? 0) + 1,
+          },
+        });
         if (fit) get().requestCamera(prev ? 'fit' : 'oblique');
       },
       onError: (_kind, message) => {

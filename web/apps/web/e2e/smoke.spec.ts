@@ -88,3 +88,40 @@ test('the worker computes the ISS preset and the readouts show sample values (J1
   expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+test('rapid inputs: the last input wins and every run is timed (WA-F3, WA-N2)', async ({
+  page,
+}, info) => {
+  test.setTimeout(90_000);
+  await page.goto('/');
+  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 10_000 });
+  const main = page.locator('main');
+  const seq = async () => Number((await main.getAttribute('data-run-seq')) ?? 0);
+  const alt = page.getByLabel('Altitude');
+  const times: number[] = [];
+  for (let i = 0; i < 12; i++) {
+    const before = await seq();
+    await alt.fill((500 + 37 * i).toFixed(3)); // a new input every time: no cache hits
+    await alt.press('Enter');
+    await expect.poll(seq, { timeout: 10_000 }).toBeGreaterThan(before);
+    expect(await main.getAttribute('data-run-cached')).toBe('false');
+    times.push(Number(await main.getAttribute('data-run-ms')));
+  }
+  // Superseding inputs without waiting: the last one is the run shown.
+  for (const km of ['700.000', '800.000', '900.000']) {
+    await alt.fill(km);
+    await alt.press('Enter');
+  }
+  await expect(page.locator('.orb-primary__item dd').first()).toHaveText(/^9\d\d\.\d\d/, {
+    timeout: 10_000,
+  });
+  times.sort((a, b) => a - b);
+  const p95 = times[Math.ceil(0.95 * times.length) - 1] ?? NaN;
+  const list = times.map((t) => t.toFixed(0)).join(', ');
+  info.annotations.push({ type: 'input→orbit ms', description: list });
+  console.log(
+    `[${info.project.name}] input→orbit p95 ${p95.toFixed(0)} ms over ${String(times.length)} runs: ${list}`,
+  );
+  // Regression guard on CI runners; the class A–D budgets (§6.2) are measured on reference devices.
+  expect(p95).toBeLessThan(1000);
+});

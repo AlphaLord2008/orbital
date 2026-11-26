@@ -104,12 +104,19 @@ function Status() {
 
 export function App() {
   const mode = useStore((s) => s.mode);
+  const lastRun = useStore((s) => s.lastRun);
   useEffect(() => {
     useStore.getState().loadPreset('V0');
     useStore.getState().setRate(60);
   }, []);
   return (
-    <main className={`orb app app--${mode}`}>
+    <main
+      className={`orb app app--${mode}`}
+      data-run-ms={lastRun ? lastRun.ms.toFixed(1) : undefined}
+      data-run-steps={lastRun?.steps}
+      data-run-cached={lastRun?.cached}
+      data-run-seq={lastRun?.seq}
+    >
       <Scene />
       <Overlay />
       <header className="hud-header">

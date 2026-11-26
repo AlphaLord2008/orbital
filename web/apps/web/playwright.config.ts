@@ -4,6 +4,8 @@ import { defineConfig, devices } from '@playwright/test';
 // (CSP included), in all three engines (requirements §11; roadmap WA-1 item 2).
 // ORBITAL_BASE_URL (e.g. a deployed Version URL) runs the same tests against a live deployment.
 const liveUrl = process.env['ORBITAL_BASE_URL'];
+// LOCAL_CHROMIUM=<path> runs the chromium project with an already-installed browser (local only).
+const localChromium = process.env['LOCAL_CHROMIUM'];
 
 export default defineConfig({
   testDir: './e2e',
@@ -23,7 +25,13 @@ export default defineConfig({
         },
       }),
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(localChromium ? { launchOptions: { executablePath: localChromium } } : {}),
+      },
+    },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],

@@ -27,7 +27,7 @@ import {
 import { createEarth } from './earth';
 import { EARTH_RADIUS_KM, M_PER_UNIT, packScenePositions } from './frame';
 import { COLORS, makeLine, setLinePositions, setSegment, updateDashes } from './lines';
-import { type OverlayFrame, type Pt, updateOverlay } from './Overlay';
+import { insetViewport, type OverlayFrame, type Pt, updateOverlay } from './Overlay';
 
 const reducedMotion =
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -105,6 +105,8 @@ function createView(host: HTMLElement): View {
   host.appendChild(renderer.domElement);
   const scene = new ThreeScene();
   const cam = new PerspectiveCamera(FOV_DEG, 1, NEAR_KM, FAR_KM);
+  const insetCam = new PerspectiveCamera(FOV_DEG, 480 / 300, 1, FAR_KM);
+  let insetKmPx = 0;
   cam.position.set(9000, 7000, 22000);
   const size = { width: 1, height: 1 };
   const resize = () => {
@@ -206,6 +208,7 @@ function createView(host: HTMLElement): View {
       xLabel: null,
       yLabel: null,
       scale: null,
+      inset: null,
       width: size.width,
       height: size.height,
     };
@@ -221,7 +224,7 @@ function createView(host: HTMLElement): View {
     if (!p) {
       Object.values(lines).forEach((l) => (l.visible = false));
       updateOverlay(frame);
-      return;
+      return false;
     }
     const res = p.result;
     const n = res.x.length;
@@ -333,12 +336,56 @@ function createView(host: HTMLElement): View {
         };
       }
     }
+    // WA-F10 / R14: Impact detail inset when the two impact marks are under 24 px apart (Analyze).
+    if (
+      st.mode === 'analyze' &&
+      frame.impact &&
+      p.crossing &&
+      tCross !== null &&
+      res.status === 'impact'
+    ) {
+      const ix = (res.x[n - 1] as number) / M_PER_UNIT;
+      const iz = -(res.y[n - 1] as number) / M_PER_UNIT;
+      const cx = p.crossing[0] / M_PER_UNIT;
+      const cz = -p.crossing[1] / M_PER_UNIT;
+      const cp = project(cx, 0, cz);
+      const ip = frame.impact;
+      if (cp && Math.hypot(cp.x - ip.x, cp.y - ip.y) < 24) {
+        const mid = new Vector3((ix + cx) / 2, 0, (iz + cz) / 2);
+        const sep = Math.hypot(ix - cx, iz - cz);
+        const dir = cam.position.clone().sub(mid).normalize();
+        const hHalf = Math.atan(Math.tan((insetCam.fov * Math.PI) / 360) * insetCam.aspect);
+        const d = Math.max(sep / (0.3 * 2 * Math.tan(hHalf)), 50);
+        insetCam.position.copy(mid).addScaledVector(dir, d);
+        insetCam.up.copy(cam.up);
+        insetCam.lookAt(mid);
+        insetCam.updateMatrixWorld();
+        insetKmPx = kmPerPixel(insetCam, d, 300);
+        const toInset = (X: number, Z: number): Pt => {
+          tmp.v.set(X, 0, Z).project(insetCam);
+          return { x: ((tmp.v.x + 1) / 2) * 480, y: ((1 - tmp.v.y) / 2) * 300 };
+        };
+        const gap = tCross - res.tEnd;
+        frame.inset = {
+          impact: toInset(ix, iz),
+          crossing: toInset(cx, cz),
+          box: { x: (ip.x + cp.x) / 2, y: (ip.y + cp.y) / 2 },
+          zoom: cam.position.distanceTo(mid) / d,
+          impactStamp: `sample ${group(n - 1)} · t = ${group(res.tEnd, dt % 1 === 0 ? 0 : 1)} s`,
+          crossingStamp: `t = ${group(tCross, 1)} s · exact`,
+          caption: `The run detects impact at whole steps: the first sample at or below Earth’s radius. This run got there ${Math.abs(gap).toFixed(1)} s ${
+            gap >= 0 ? 'before' : 'after'
+          } the exact crossing; the two points are ${sep.toFixed(1)} km apart. This is this run's own comparison, not a validation result.`,
+        };
+      }
+    }
     const L = p.extentKm * 1.1;
     frame.xLabel = occludedByEarth(cam.position, L, 0, 0) ? null : project(L, 0, 0);
     frame.yLabel = occludedByEarth(cam.position, 0, 0, -L) ? null : project(0, 0, -L);
     const sc = niceScale(kmPx);
     frame.scale = { px: sc.px, label: `${sc.km.toLocaleString('en-US')} km at Earth’s distance` };
     updateOverlay(frame);
+    return frame.inset !== null;
   };
 
   let raf = 0;
@@ -347,9 +394,25 @@ function createView(host: HTMLElement): View {
     raf = requestAnimationFrame(loop);
     const delta = Math.min((now - last) / 1000, 0.25);
     last = now;
-    frame(delta);
+    const wantsInset = frame(delta);
     earth.update(Math.min(useStore.getState().t, prepared.current?.result.tEnd ?? Infinity));
     renderer.render(scene, cam);
+    const vp = wantsInset ? insetViewport(host.getBoundingClientRect()) : null;
+    if (vp) {
+      const y = size.height - vp.y - vp.h;
+      renderer.setScissorTest(true);
+      renderer.setScissor(vp.x, y, vp.w, vp.h);
+      renderer.setViewport(vp.x, y, vp.w, vp.h);
+      renderer.clear();
+      for (const l of Object.values(lines)) {
+        l.material.resolution.set(vp.w, vp.h);
+        updateDashes(l, insetKmPx);
+      }
+      renderer.render(scene, insetCam);
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, size.width, size.height);
+      for (const l of Object.values(lines)) l.material.resolution.set(size.width, size.height);
+    }
   };
   raf = requestAnimationFrame(loop);
 

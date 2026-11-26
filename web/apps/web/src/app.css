@@ -97,6 +97,58 @@ body,
   stroke-width: 2.5;
   stroke-linecap: round;
 }
+/* Impact detail inset (WA-F10, R14; design D5). The view area is transparent: the scene renders the zoomed camera there. */
+.scene-inset {
+  position: absolute;
+  left: 50%;
+  top: 116px;
+  width: 482px;
+  margin: 0 0 0 -241px;
+  background: transparent;
+  pointer-events: none;
+}
+.scene-inset .orb-inset__head,
+.scene-inset__caption {
+  background: var(--bg-panel);
+}
+.scene-inset__view {
+  width: 480px;
+  height: 300px;
+}
+.scene-inset__caption {
+  padding: 10px 12px 12px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--line-hairline);
+}
+.scene-inset__label {
+  display: grid;
+  gap: 2px;
+}
+.scene-inset__label--impact {
+  color: var(--status-critical);
+}
+.scene-inset__label--crossing {
+  color: var(--ref-analytic);
+}
+.scene-inset__name {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.scene-overlay__box {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px dashed var(--text-primary);
+  border-radius: 2px;
+}
+.mk-leader--dashed {
+  stroke-dasharray: 3 3;
+}
 [hidden] {
   display: none !important;
 }
