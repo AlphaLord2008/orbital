@@ -442,6 +442,9 @@ export function Scene() {
     if (!host.current) return;
     let view: View;
     try {
+      // WA-N4: probe for WebGL 2 first, so an unsupported browser gets the fallback without a renderer error.
+      if (!document.createElement('canvas').getContext('webgl2'))
+        throw new Error('WebGL 2 is not available');
       view = createView(host.current);
     } catch (e) {
       // WA-N4/WA-E5: no WebGL → keep every control, readout and number working; say why the view is missing.

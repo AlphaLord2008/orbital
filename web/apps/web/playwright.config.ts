@@ -32,7 +32,15 @@ export default defineConfig({
         ...(localChromium ? { launchOptions: { executablePath: localChromium } } : {}),
       },
     },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    {
+      name: 'firefox',
+      // Headless Firefox on CI runners blocklists WebGL 2 on software rendering ("AllowWebgl2:false").
+      // Real Firefox with a GPU has it; force it so the scene is tested, not the no-WebGL fallback.
+      use: {
+        ...devices['Desktop Firefox'],
+        launchOptions: { firefoxUserPrefs: { 'webgl.force-enabled': true } },
+      },
+    },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });
