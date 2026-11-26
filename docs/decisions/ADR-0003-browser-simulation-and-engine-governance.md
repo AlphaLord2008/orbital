@@ -70,7 +70,7 @@ Measurements: proposal appendix (throwaway spike, 2026-11-23).
 
 The absolute bound follows from the per-sample criterion that already exists. If every |E_k^TS − E_k^Py| ≤ ε|E_k| with ε = 10⁻¹¹, then |Δ drift| ≤ ε(2 + drift) ≈ 2 × 10⁻¹¹. The gate of 10⁻¹¹ is therefore no looser than §3.3 already implies.
 
-**Measured** (Node and three browsers identical):
+**Measured** in Node (the three browser runs pass the same gates; their values were not tabulated):
 
 | Run | energy drift | abs diff | rel diff | h drift | abs diff | rel diff |
 |---|---|---|---|---|---|---|
