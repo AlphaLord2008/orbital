@@ -107,14 +107,27 @@ test('rapid inputs: the last input wins and every run is timed (WA-F3, WA-N2)', 
     expect(await main.getAttribute('data-run-cached')).toBe('false');
     times.push(Number(await main.getAttribute('data-run-ms')));
   }
-  // Superseding inputs without waiting: the last one is the run shown.
+  // Superseding inputs without waiting: the last accepted input must be the run shown.
+  const seqBefore = await seq();
   for (const km of ['700.000', '800.000', '900.000']) {
     await alt.fill(km);
     await alt.press('Enter');
   }
-  await expect(page.locator('.orb-primary__item dd').first()).toHaveText(/^9\d\d\.\d\d/, {
-    timeout: 10_000,
-  });
+  // The run on screen was built from r0 = R_E + 900 km (6,378,137 m + 900,000 m)…
+  await expect(main).toHaveAttribute('data-run-r0', '7278137', { timeout: 10_000 });
+  // …and no later run replaces it (a stale 700/800 km result arriving last would change r0).
+  const seqWinner = await seq();
+  expect(seqWinner).toBeGreaterThan(seqBefore);
+  await page.waitForTimeout(1500);
+  expect(await seq()).toBe(seqWinner);
+  await expect(main).toHaveAttribute('data-run-r0', '7278137');
+  // Deterministic readout: pause and go to sample 0, where the altitude is exactly the input.
+  // (During playback the sample-k altitude moves, a few km below 900 on this circular orbit.)
+  const pause = page.getByRole('button', { name: 'Pause' });
+  if (await pause.isVisible()) await pause.click();
+  await page.getByRole('slider', { name: 'Playback time' }).press('Home');
+  await expect(page.getByText(/sample 0 · t = 0 s/)).toBeVisible();
+  await expect(page.locator('.orb-primary__item dd').first()).toHaveText('900.00km');
   times.sort((a, b) => a - b);
   const p95 = times[Math.ceil(0.95 * times.length) - 1] ?? NaN;
   const list = times.map((t) => t.toFixed(0)).join(', ');

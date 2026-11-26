@@ -105,6 +105,7 @@ function Status() {
 export function App() {
   const mode = useStore((s) => s.mode);
   const lastRun = useStore((s) => s.lastRun);
+  const runR0 = useStore((s) => s.result?.run.r0[0]);
   useEffect(() => {
     useStore.getState().loadPreset('V0');
     useStore.getState().setRate(60);
@@ -116,6 +117,7 @@ export function App() {
       data-run-steps={lastRun?.steps}
       data-run-cached={lastRun?.cached}
       data-run-seq={lastRun?.seq}
+      data-run-r0={runR0}
     >
       <Scene />
       <Overlay />
