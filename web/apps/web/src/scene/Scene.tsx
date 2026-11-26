@@ -5,7 +5,7 @@
  * first-route JS budget; its `import * as THREE` defeats tree-shaking.)
  */
 import { analytic } from '@orbital/engine';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PerspectiveCamera, Scene as ThreeScene, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { hermite, sampleIndex } from '../sim/display';
@@ -437,13 +437,34 @@ function createView(host: HTMLElement): View {
 export function Scene() {
   const host = useRef<HTMLDivElement>(null);
   const result = useStore((s) => s.result);
+  const [failed, setFailed] = useState<string | null>(null);
   useEffect(() => {
     if (!host.current) return;
-    const view = createView(host.current);
+    let view: View;
+    try {
+      view = createView(host.current);
+    } catch (e) {
+      // WA-N4/WA-E5: no WebGL → keep every control, readout and number working; say why the view is missing.
+      const message = e instanceof Error ? e.message : String(e);
+      queueMicrotask(() => {
+        setFailed(message);
+      });
+      return;
+    }
     return () => {
       view.dispose();
     };
   }, []);
+  if (failed !== null) {
+    return (
+      <div className="scene scene--failed" role="note">
+        <p className="orb-caption">
+          The 3D view could not start because WebGL is unavailable in this browser. Every readout
+          and control still works from the same computed run.
+        </p>
+      </div>
+    );
+  }
   const label = result
     ? `Orbit view: ${result.exact.classification === 'bound' ? 'bound orbit' : 'escape trajectory'}, ${
         result.status === 'impact' ? 'ends in impact' : 'completed'

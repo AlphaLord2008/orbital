@@ -28,6 +28,12 @@ body,
   position: absolute;
   inset: 0;
 }
+.scene--failed {
+  display: grid;
+  place-items: center;
+  padding: 0 360px;
+  text-align: center;
+}
 .scene canvas {
   display: block;
   touch-action: none;
