@@ -1,0 +1,46 @@
+/* Generated from docs/design/tokens.json (design system v2, approved at G1). Do not edit by hand. */
+:root {
+  --bg-space: #0b0e13;
+  --bg-panel: #12161d;
+  --bg-raised: #181d26;
+  --bg-inset: #0e1117;
+  --line-hairline: #2a3140;
+  --line-control: #646d80;
+  --text-primary: #e6e9ef;
+  --text-secondary: #9aa3b2;
+  --text-tertiary: #7c8596;
+  --text-disabled: #5a6271;
+  --accent-spacecraft: #ff9548;
+  --accent-spacecraft-hover: #ffad70;
+  --accent-spacecraft-active: #e8803a;
+  --on-accent: #0b0e13;
+  --ref-analytic: #62c2e3;
+  --tier-validated: #5cc08e;
+  --tier-tested: #c3a6f2;
+  --tier-unvalidated: #e9c74f;
+  --status-critical: #f2685b;
+  --focus-ring: #8ab4ff;
+  --badge-validated-bg: #1b2a2b;
+  --badge-tested-bg: #272737;
+  --badge-unvalidated-bg: #2c2b23;
+  --badge-critical-bg: #2d2024;
+  --scrim: rgba(11, 14, 19, 0.72);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 999px;
+  --opacity-future: 0.55;
+  --opacity-dimmed: 0.4;
+  --opacity-disabled: 0.45;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}

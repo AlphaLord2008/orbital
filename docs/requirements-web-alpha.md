@@ -110,7 +110,7 @@ WA-F14 was added in rev 2. The WA-0 close-up render showed that on the V0 refere
 | Frame rate | 60 fps | ≥ 30 | ≥ 30 | ≥ 24 |
 | Orbit visible after navigation | ≤ 3.0 s | — | — | ≤ 5.0 s |
 
-Plus, on all classes: first-route JS ≤ 300 KB gzip; fonts ≤ 120 KB; first Earth texture ≤ 400 KB; transfer before first orbit ≤ 1.2 MB; LCP ≤ 2.5 s and CLS ≤ 0.1 on class A; JS heap ≤ 250 MB at the step cap; GPU texture ≤ 64 MB on C/D and ≤ 192 MB on A; Lighthouse performance ≥ 90 and accessibility 100.
+Plus, on all classes: first-route JS ≤ 300 KB gzip; fonts ≤ 120 KB; first Earth texture ≤ 400 KB; transfer before first orbit ≤ 1.2 MB; LCP ≤ 2.5 s and CLS ≤ 0.1 on class A; JS heap ≤ 250 MB at the step cap; GPU texture ≤ 64 MB on C/D and ≤ 192 MB on A; ~~Lighthouse performance ≥ 90~~ (replaced by amendment A1, §6.4) and Lighthouse accessibility 100.
 
 ### 6.3 Responsiveness invariant (every class, every size)
 
@@ -119,6 +119,46 @@ Plus, on all classes: first-route JS ≤ 300 KB gzip; fonts ≤ 120 KB; first Ea
 3. Runs over 150 ms show determinate progress; chunked and unchunked runs are bit-identical (tested).
 4. A new input supersedes a running computation within one frame.
 5. INP ≤ 200 ms.
+
+### 6.4 Amendment A1 (2026-11-26, approved by Harshith): measure startup and interaction separately
+
+**Why.** The Lighthouse performance score of ≥ 90 failed in WA-3+4: 0.67 in CI and 0.60 locally. Measured locally, desktop preset, three runs:
+- FCP 0.24 s, LCP 0.24 s, CLS 0.0002;
+- TBT 7.9–8.1 s and Speed Index 7.1 s.
+
+Experiments, one setting changed at a time:
+
+| Change | Score | TBT | SI |
+|---|---|---|---|
+| none | 0.60 | 8.1 s | 7.1 s |
+| no scene drawing | 1.00 | 0 | 0.5 s |
+| no MSAA | 0.65 | 0.64 s | 6.9 s |
+
+TBT is software WebGL in the lab browser, at about 85 ms a frame. The same Chromium runs at 60 fps in ordinary headless use. SI stays high because the orbit autoplays (approved design), so the page never becomes visually complete. The aggregate score therefore measures the lab's renderer and the autoplay, not the user's experience. Autoplay, MSAA and the visual design are kept, with no Lighthouse-specific behaviour.
+
+**Replacement.**
+- **Startup gates (Lighthouse, cold load, every PR):** FCP ≤ 1.8 s, LCP ≤ 2.5 s, CLS ≤ 0.1, accessibility 100.
+  - The performance score is still recorded as a warning.
+  - The resource budgets above are unchanged.
+- **Interactive requirements (`e2e/perf.spec.ts`, reference devices, every class):**
+  - frame rate per §6.2;
+  - frame pacing: p95 frame interval ≤ 1.5 × the class frame time (A 25 ms, B/C 50 ms, D 63 ms);
+  - input latency: INP ≤ 200 ms (§6.3.5);
+  - main-thread blocking: no long task > 50 ms from receiving or drawing a result (§6.3.1), and steady playback blocking ≤ 5 % of wall time.
+- **CI coverage (software rendering, no GPU):**
+  - The scene keeps rendering during autoplay, and every input completes.
+  - The no-WebGL fallback keeps every readout working without console errors.
+  - Frame and latency figures are recorded, not gated: software rendering is not a device class.
+  - INP is gated whenever the renderer is hardware.
+
+**Status.** Reference-device measurements have not been made yet. They are part of WA-6 acceptance.
+
+Measured in CI-equivalent software rendering (SwiftShader), local, for the record:
+- 8 fps, p95 frame interval 133 ms;
+- long-task blocking 5.2 s per 8 s of playback;
+- worst input latency 272–288 ms.
+
+So a browser without GPU acceleration currently misses the INP target.
 
 ## 7. Accessibility
 

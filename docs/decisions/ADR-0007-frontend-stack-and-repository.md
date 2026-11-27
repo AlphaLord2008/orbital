@@ -93,4 +93,5 @@ orbital/
 | Rev | Date | Change |
 | --- | --- | --- |
 | 1 | 2026-11-23 | Accepted. |
+| 3 | 2026-11-25 | WA-3+4: **React Three Fiber and drei dropped; the scene is plain three.js** driven from the Zustand store. With R3F the first-route JS was 333 KB gzip against the 300 KB budget (§6.2), because R3F imports `* as THREE` and defeats tree-shaking; plain three with named imports measures 227 KB. three's `Line2` and `OrbitControls` are used directly. Reversible if the budget changes. |
 | 2 | 2026-11-25 | WA-1: toolchain pinned (TypeScript 6.0 for lint compatibility; Node 26 LTS; pnpm 12 with a 7-day minimum release age); React Aria Components chosen for controls. |
