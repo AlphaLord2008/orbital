@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = "LicenseRef-Proprietary"
 authors = [{ name = "Harshith Vaibhav" }]
 dependencies = [
-    "numpy>=1.26",
+    "numpy>=2.4.6",
 ]
 classifiers = [
     "Private :: Do Not Upload",
