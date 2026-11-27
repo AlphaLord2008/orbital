@@ -1,0 +1,40 @@
+{
+  "radix": {
+    "axeViolations": [],
+    "fieldRole": "input[type=text]",
+    "fieldAriaRoleDescription": null,
+    "sliderName": "Altitude slider",
+    "sliderValueText": "400 km",
+    "fieldArrowUpCommits": true,
+    "groupedNumberParsed": false,
+    "outOfRangeKeptVisible": true,
+    "outOfRangeNotCommitted": true,
+    "invalidFlagged": true,
+    "errorLinkedByDescribedBy": true,
+    "sliderArrowRight": true,
+    "sliderHome": true,
+    "sliderEnd": true,
+    "sliderPageDownMoves": true,
+    "sliderSyncsField": true,
+    "sliderValueTextAfter": "99990 km"
+  },
+  "rac": {
+    "axeViolations": [],
+    "fieldRole": "input[type=text]",
+    "fieldAriaRoleDescription": "Number field",
+    "sliderName": "Altitude slider",
+    "sliderValueText": "400 km",
+    "fieldArrowUpCommits": true,
+    "groupedNumberParsed": true,
+    "outOfRangeKeptVisible": true,
+    "outOfRangeNotCommitted": true,
+    "invalidFlagged": true,
+    "errorLinkedByDescribedBy": true,
+    "sliderArrowRight": true,
+    "sliderHome": true,
+    "sliderEnd": true,
+    "sliderPageDownMoves": true,
+    "sliderSyncsField": true,
+    "sliderValueTextAfter": "90,010 km"
+  }
+}

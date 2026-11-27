@@ -34,6 +34,8 @@
 
 ### WA-1 — Scaffold, CI and hosting check (8–12 h)
 
+*Complete on branch `wa1/scaffold-ci-hosting` (PR #2), 2026-11-25; online at https://orbital-web.harshuvaibhav.workers.dev; evidence in `docs/validation/wa1-verification.md`.*
+
 1. pnpm workspace `web/` with `packages/engine` (empty, boundary rules) and `apps/web` (strict TS shell rendering only "ORBITAL", no product UI).
 2. CI (GitHub Actions): Python 3.11/3.12 suite; typecheck; lint; Vitest; build; size-limit baseline; Playwright smoke in Chromium, Firefox, WebKit.
 3. Engine boundary check: `@orbital/engine` fails CI if it imports DOM, React, three or app code.

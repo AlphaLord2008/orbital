@@ -1,0 +1,24 @@
+{
+  "name": "spike-controls-a11y",
+  "private": true,
+  "description": "WA-1 item 6 throwaway spike: Radix Primitives vs React Aria Components for the slider + number field pair (ADR-0007). Not part of the workspace or the product.",
+  "type": "module",
+  "scripts": {
+    "build:radix": "vite build --mode radix --outDir dist/radix",
+    "build:rac": "vite build --mode rac --outDir dist/rac",
+    "build": "pnpm build:radix && pnpm build:rac",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@radix-ui/react-slider": "1.6.1",
+    "react": "19.3.1",
+    "react-aria-components": "1.22.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@vitejs/plugin-react": "6.3.0",
+    "vite": "8.3.8"
+  }
+}

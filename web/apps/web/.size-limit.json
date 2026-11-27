@@ -1,0 +1,14 @@
+[
+  {
+    "name": "JS (all chunks, gzip) — budget: first-route JS ≤ 300 KB (requirements §6.2)",
+    "path": "dist/assets/*.js",
+    "gzip": true,
+    "limit": "300 kB"
+  },
+  {
+    "name": "CSS (gzip)",
+    "path": "dist/assets/*.css",
+    "gzip": true,
+    "limit": "40 kB"
+  }
+]

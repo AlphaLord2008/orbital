@@ -1,0 +1,9 @@
+body { font-family: system-ui, sans-serif; background: #0b0e13; color: #e6e9ef; margin: 24px; }
+label, .label { display: block; margin: 8px 0 4px; }
+input { font: inherit; padding: 6px; background: #12161d; color: #e6e9ef; border: 1px solid #5c6575; }
+.track { position: relative; height: 4px; width: 280px; background: #5c6575; margin: 12px 0; }
+.range { position: absolute; height: 100%; background: #ff9548; }
+.thumb { display: block; width: 20px; height: 20px; border-radius: 50%; background: #e6e9ef; top: -8px; }
+.thumb:focus-visible { outline: 2px solid #7cc4ff; outline-offset: 2px; }
+.error { color: #ff8a80; }
+#state { margin-top: 16px; font-family: monospace; }

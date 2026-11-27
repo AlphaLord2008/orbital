@@ -22,3 +22,12 @@ output/
 # Editors
 .idea/
 .vscode/
+
+# Web (WA-1)
+node_modules/
+web/**/dist/
+web/**/test-results/
+web/**/playwright-report/
+web/**/.lighthouseci/
+web/**/.wrangler/
+*.tsbuildinfo
