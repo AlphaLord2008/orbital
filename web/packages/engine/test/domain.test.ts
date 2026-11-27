@@ -6,12 +6,19 @@
  */
 import { describe, expect, it } from 'vitest';
 import domain from '../../../../fixtures/v1/domain/conics.json';
+// Hold-out cases, generated after the tolerance was frozen (docs/validation/conic-domain-tolerance.md).
+import holdout from '../../../../fixtures/v1/domain/conics-holdout.json';
 import { analytic, MU_EARTH, propagate, R_EARTH, ValueError } from '../src/index';
 
 const EPS = Number.EPSILON;
 const num = (s: string) => Number(s);
 
-describe.each(domain.cases)('$name', (c) => {
+const CASES = [
+  ...domain.cases.map((c) => ({ ...c, name: `domain: ${c.name}` })),
+  ...holdout.cases.map((c) => ({ ...c, name: `holdout: ${c.name}` })),
+];
+
+describe.each(CASES)('$name', (c) => {
   const r0 = c.inputs.r0.map(num);
   const v0 = c.inputs.v0.map(num);
   const e = num(c.scalars.e);
