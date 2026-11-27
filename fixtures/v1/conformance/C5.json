@@ -5,7 +5,9 @@
  "engine": {
   "impl": "orbital-py",
   "version": "0.1.1",
-  "source_sha256": "bcad47d9d04b0ead9a9b918a9a4e3d803f7372c1fcdea6b7503dae7c0cc8de59"
+  "source_sha256": "90d1e8b31b9cf193d54d2627c180fd661c65a98201005d6d7a8ecde5f2c23271",
+  "numpy": "2.5.5",
+  "blas_kernel": "Haswell"
  },
  "inputs": {
   "r0": [

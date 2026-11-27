@@ -12,6 +12,8 @@ Usage: python scripts/generate_fixtures.py
 import hashlib
 import json
 import math
+import os
+import platform
 import sys
 from pathlib import Path
 
@@ -64,8 +66,38 @@ def source_sha256():
     return digest.hexdigest()
 
 
+# np.linalg.norm on a vector calls OpenBLAS dnrm2, whose kernel OpenBLAS picks from the host CPU.
+# Different kernels differ in the last ulp (measured: SkylakeX vs Haswell/Zen/Prescott), so fixture
+# bytes would depend on which CI runner ran. Pin the kernel and the NumPy build (AVX2 is on every
+# x86-64 GitHub runner). The engine and its tolerances are unchanged.
+BLAS_KERNEL = "Haswell"
+NUMPY_VERSION = "2.5.5"
+
+
+def check_environment():
+    if platform.machine().lower() not in ("x86_64", "amd64"):
+        sys.exit(
+            "generate_fixtures: fixtures are generated on x86-64 only (OpenBLAS Haswell kernel; see "
+            "docs/validation/floating-point.md). Nothing else needs this: tests, the engine and the web "
+            "app run anywhere. On Apple Silicon use CI, or: docker run --platform linux/amd64 ..."
+        )
+    problems = []
+    if os.environ.get("OPENBLAS_CORETYPE") != BLAS_KERNEL:
+        problems.append(f"set OPENBLAS_CORETYPE={BLAS_KERNEL}")
+    if np.__version__ != NUMPY_VERSION:
+        problems.append(f"install numpy=={NUMPY_VERSION} (found {np.__version__})")
+    if problems:
+        sys.exit("generate_fixtures: reproducible fixtures need a pinned environment: " + "; ".join(problems))
+
+
 def engine_info():
-    return {"impl": "orbital-py", "version": orbital.__version__, "source_sha256": source_sha256()}
+    return {
+        "impl": "orbital-py",
+        "version": orbital.__version__,
+        "source_sha256": source_sha256(),
+        "numpy": np.__version__,
+        "blas_kernel": BLAS_KERNEL,
+    }
 
 
 def run_case(cid, case, description):
@@ -200,6 +232,7 @@ def c8():
 
 
 def main():
+    check_environment()
     OUT.mkdir(parents=True, exist_ok=True)
     for cid, (case, description) in CONFORMANCE.items():
         record = run_case(cid, case, description)

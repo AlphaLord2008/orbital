@@ -190,6 +190,55 @@ def build(case):
     return record
 
 
+# Conic-domain reference (Batch B): circular-start states with speed factor k around the escape
+# threshold sqrt(2), from high-eccentricity ellipses through near-parabolic to hyperbolic. The two
+# k values next to sqrt(2) put e just outside the parabolic band |e - 1| < 1e-9 on either side.
+DOMAIN_K = [
+    ("k=1.39", 1.39),
+    ("k=1.41", 1.41),
+    ("k=1.414", 1.414),
+    ("k=1.4142", 1.4142),
+    ("k=1.41421", 1.41421),
+    ("e=1-2e-9", math.sqrt(2.0 - 2e-9)),
+    ("e=1+2e-9", math.sqrt(2.0 + 2e-9)),
+    ("k=1.41422", 1.41422),
+    ("k=1.4143", 1.4143),
+    ("k=1.42", 1.42),
+    ("k=1.6", 1.6),
+]
+DOMAIN_TIMES = [-1.0e4, -100.0, 0.0, 1.0, 60.0, 600.0, 3600.0, 21600.0, 86400.0, 1.0e6, 3.0e8]
+
+
+def build_domain():
+    radius = R_EARTH + 400_000.0
+    cases = []
+    for name, k in DOMAIN_K:
+        r0 = (radius, 0.0)
+        v0 = (0.0, k * math.sqrt(MU_EARTH / radius))  # the app's initial-state construction
+        orbit = Orbit(r0, v0)
+        times = list(DOMAIN_TIMES)
+        if orbit.energy < 0:
+            period = float(orbit.scalars()["period"])
+            times += [t for t in (period / 4, period / 2, period - 60.0) if t < 3.0e8]
+        states = []
+        for t in sorted(times):
+            x, y, vx, vy = orbit.state(t)
+            states.append({"t": f64(t), "r": [f64(x), f64(y)], "v": [f64(vx), f64(vy)]})
+        cases.append({
+            "name": name,
+            "k": f64(k),
+            "inputs": {"r0": [f64(c) for c in r0], "v0": [f64(c) for c in v0]},
+            "scalars": {key: f64(val) for key, val in orbit.scalars().items()},
+            "states": states,
+        })
+    return {
+        "generator": "scripts/reference_mp.py build_domain (mpmath 50 digits, universal variables)",
+        "mpmath": mp.__version__,
+        "mu": f64(MU_EARTH),
+        "cases": cases,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", default=str(ROOT / "fixtures" / "v1" / "reference"))
@@ -200,6 +249,11 @@ def main():
         record = build(case)
         (out / f"{case.id}.json").write_text(json.dumps(record, indent=1, allow_nan=False) + "\n")
         print(f"{case.id}: {len(record['states'])} reference states")
+    domain = build_domain()
+    domain_dir = out.parent / "domain"  # kept apart from the registered REF-1 case files
+    domain_dir.mkdir(parents=True, exist_ok=True)
+    (domain_dir / "conics.json").write_text(json.dumps(domain, indent=1, allow_nan=False) + "\n")
+    print(f"domain: {len(domain['cases'])} conics around the escape threshold")
 
 
 if __name__ == "__main__":
