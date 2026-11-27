@@ -2,15 +2,73 @@
  * Interactive performance (requirements-web-alpha §6.2, amendment A1): frame rate, frame pacing,
  * input latency and main-thread blocking during real playback.
  *
- * CI runs this with software rendering (no GPU). Software rendering is not a reference device
- * class, so there the test gates that the scene keeps producing frames and every input completes,
- * and records frame and latency figures without judging them. On a hardware renderer it also
- * gates INP ≤ 200 ms (§6.3.5). On reference devices run the same file against the
+ * Two kinds of criteria, kept apart:
+ * - Liveness (every renderer, CI included): the rendered canvas keeps changing during autoplay
+ *   and the browser never stalls for more than 1 s between frames. A frozen renderer fails this
+ *   (verified below by freezing WebGL draws in the page). It says nothing about speed.
+ * - Performance (§6.2 budgets and amendment A1): frame rate, pacing, long tasks and INP. These are
+ *   judged on reference devices; CI has software rendering (not a device class), so there they are
+ *   recorded only. INP ≤ 200 ms (§6.3.5) is also gated whenever the renderer is hardware. On reference devices run the same file against the
  * live site with a GPU browser, e.g.
  *   ORBITAL_BASE_URL=https://orbital-web.harshuvaibhav.workers.dev pnpm exec playwright test perf --project=chromium --headed
  * and compare the printed report with the class budgets.
  */
-import { expect, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+
+/**
+ * Pixels that differ between two screenshots of the WebGL canvas alone, `ms` apart. Every DOM layer
+ * over the canvas (overlay, panels, readouts, transport) is hidden, so only rendered output counts.
+ */
+async function canvasChange(page: Page, ms: number): Promise<number> {
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll<HTMLElement>(
+      '.scene-overlay,.scene-inset,header,.hud-left,.hud-right,.hud-legend,.hud-bottom,.hud-status',
+    )) {
+      el.style.visibility = 'hidden';
+    }
+  });
+  const canvas = page.locator('.scene canvas');
+  const a = (await canvas.screenshot({ scale: 'css' })).toString('base64');
+  await page.waitForTimeout(ms);
+  const b = (await canvas.screenshot({ scale: 'css' })).toString('base64');
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll<HTMLElement>(
+      '.scene-overlay,.scene-inset,header,.hud-left,.hud-right,.hud-legend,.hud-bottom,.hud-status',
+    )) {
+      el.style.visibility = '';
+    }
+  });
+  return page.evaluate(
+    async ({ a, b }) => {
+      const load = async (src: string) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${src}`;
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = img.width;
+        c.height = img.height;
+        const ctx = c.getContext('2d');
+        if (!ctx) throw new Error('2d context');
+        ctx.drawImage(img, 0, 0);
+        return ctx.getImageData(0, 0, c.width, c.height).data;
+      };
+      const [pa, pb] = await Promise.all([load(a), load(b)]);
+      let n = 0;
+      for (let i = 0; i < pa.length; i += 4) {
+        const d =
+          Math.abs((pa[i] ?? 0) - (pb[i] ?? 0)) +
+          Math.abs((pa[i + 1] ?? 0) - (pb[i + 1] ?? 0)) +
+          Math.abs((pa[i + 2] ?? 0) - (pb[i + 2] ?? 0));
+        if (d > 24) n++;
+      }
+      return n;
+    },
+    { a, b },
+  );
+}
+
+/** Liveness thresholds: renderer-independent, far below any performance budget. */
+const LIVE = { changedPixels: 50, windowMs: 2000, maxFrameGapMs: 1000 } as const;
 
 declare global {
   interface Window {
@@ -109,7 +167,19 @@ test('playback: frame rate, pacing, long tasks and input latency', async ({ page
   info.annotations.push({ type: 'interactive performance', description: text });
   console.log(`[perf] ${text}`);
 
-  expect(intervals.length).toBeGreaterThan(40); // the scene keeps rendering during autoplay (≥ 5 fps)
+  // Liveness (every renderer): frames keep coming and the rendered image keeps changing.
+  expect(report.frameIntervalMs.max, 'longest gap between frames').toBeLessThanOrEqual(
+    LIVE.maxFrameGapMs,
+  );
+  const changed = await canvasChange(page, LIVE.windowMs);
+  info.annotations.push({
+    type: 'liveness',
+    description: `${String(changed)} canvas pixels changed in 2 s`,
+  });
+  expect(changed, 'rendered canvas changes during autoplay').toBeGreaterThanOrEqual(
+    LIVE.changedPixels,
+  );
+  // Performance: recorded above for every renderer; budgets are judged on reference devices.
   const software = /SwiftShader|llvmpipe|softpipe|software/i.test(report.renderer);
   if (!software)
     expect(report.inputLatencyMs.worst).toBeLessThanOrEqual(200); // §6.3.5
@@ -118,4 +188,29 @@ test('playback: frame rate, pacing, long tasks and input latency', async ({ page
       type: 'software rendering',
       description: 'INP recorded, not gated (not a device class)',
     });
+});
+
+test('liveness check: a frozen renderer fails it', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 15_000 });
+  await page.waitForTimeout(1500);
+  expect(await canvasChange(page, LIVE.windowMs), 'live renderer passes').toBeGreaterThanOrEqual(
+    LIVE.changedPixels,
+  );
+  // Freeze the renderer: WebGL draw calls stop doing anything (the page and playback keep running).
+  await page.evaluate(() => {
+    const proto = WebGL2RenderingContext.prototype as unknown as Record<string, unknown>;
+    for (const name of [
+      'drawArrays',
+      'drawElements',
+      'drawArraysInstanced',
+      'drawElementsInstanced',
+    ]) {
+      proto[name] = () => undefined;
+    }
+  });
+  await page.waitForTimeout(500);
+  expect(await canvasChange(page, LIVE.windowMs), 'frozen renderer is detected').toBeLessThan(
+    LIVE.changedPixels,
+  );
 });

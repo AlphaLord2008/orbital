@@ -79,6 +79,17 @@ Design tokens and components in code (from the design system); Setup and Diagnos
 
 Accessibility (axe zero, keyboard and screen-reader passes); responsive layouts; 2D fallback; performance pass per class; real Safari; J1–J7 automated.
 
+**Carried from WA-3+4 (PR #4), required for WA-6 acceptance:**
+- **Firefox 3D rendering.** CI's headless Firefox has no WebGL 2, so its 3D tests skip with that reason and only the no-WebGL fallback is verified. 3D needs a Firefox with WebGL 2: a GPU runner or a real device.
+- **Reference-device performance (amendment A1).** Run `e2e/perf.spec.ts` on classes A–D against the live site:
+  - class A 60 fps;
+  - normal-size p95 ≤ 100 ms (WA-4);
+  - large-size budgets and the responsiveness invariant;
+  - frame pacing and INP.
+  CI only records these figures, under software rendering.
+- **Texture memory per class.** It is computed by construction: 4K RGBA with mips ≈ 43 MB on A/B; 2K ≈ 11 MB on C/D. It still has to be measured on the devices.
+- **NASA texture provenance.** The Earth texture is the three-globe redistribution of NASA Blue Marble. Replace it with the original downloaded from NASA Visible Earth (this sandbox could not reach NASA).
+
 **Accepted when:** every budget in requirements §6 is met or has an exception you approved; accessibility evidence is recorded.
 
 ### WA-7 — Usability test (8–12 h)
