@@ -239,6 +239,51 @@ def build_domain():
     }
 
 
+# Hold-out cases (generated after the tolerance in docs/validation/conic-domain-tolerance.md was
+# frozen; not used in choosing it): other altitudes, retrograde, non-perpendicular starts, other times.
+def _start(alt_km, k, angle_deg=0.0, gamma_deg=0.0, retro=False):
+    radius = R_EARTH + alt_km * 1000.0
+    th, g = math.radians(angle_deg), math.radians(gamma_deg)
+    speed = k * math.sqrt(MU_EARTH / radius) * (-1.0 if retro else 1.0)
+    r0 = (radius * math.cos(th), radius * math.sin(th))
+    # flight-path angle g: velocity rotated from the local horizontal toward the radial direction
+    v0 = (speed * (-math.sin(th) * math.cos(g) + math.cos(th) * math.sin(g)),
+          speed * (math.cos(th) * math.cos(g) + math.sin(th) * math.sin(g)))
+    return r0, v0
+
+
+HOLDOUT = [
+    ("2000 km, k=1.405", _start(2000, 1.405)),
+    ("GEO, k=1.4141", _start(35786.03593115724, 1.4141)),
+    ("150 km, k=1.41419", _start(150, 1.41419)),
+    ("10000 km, e=1+5e-9", _start(10000, math.sqrt(2.0 + 5e-9))),
+    ("400 km, k=1.4145", _start(400, 1.4145)),
+    ("800 km, 120 deg, gamma 20 deg, k=1.413", _start(800, 1.413, 120.0, 20.0)),
+    ("600 km, retrograde, k=1.4141", _start(600, 1.4141, retro=True)),
+    ("1200 km, -45 deg, gamma -10 deg, k=1.45", _start(1200, 1.45, -45.0, -10.0)),
+    ("300 km, 200 deg, e=1-5e-9", _start(300, math.sqrt(2.0 - 5e-9), 200.0, 0.0)),
+]
+HOLDOUT_TIMES = [-3.3e5, -777.7, 0.5, 123.456, 4567.8, 98765.4, 2.5e6, 7.7e7]
+
+
+def build_holdout():
+    cases = []
+    for name, (r0, v0) in HOLDOUT:
+        orbit = Orbit(r0, v0)
+        states = []
+        for t in HOLDOUT_TIMES:
+            x, y, vx, vy = orbit.state(t)
+            states.append({"t": f64(t), "r": [f64(x), f64(y)], "v": [f64(vx), f64(vy)]})
+        cases.append({
+            "name": name,
+            "inputs": {"r0": [f64(c) for c in r0], "v0": [f64(c) for c in v0]},
+            "scalars": {key: f64(val) for key, val in orbit.scalars().items()},
+            "states": states,
+        })
+    return {"generator": "scripts/reference_mp.py build_holdout (mpmath 50 digits, universal variables)",
+            "mpmath": mp.__version__, "mu": f64(MU_EARTH), "cases": cases}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", default=str(ROOT / "fixtures" / "v1" / "reference"))
@@ -254,6 +299,9 @@ def main():
     domain_dir.mkdir(parents=True, exist_ok=True)
     (domain_dir / "conics.json").write_text(json.dumps(domain, indent=1, allow_nan=False) + "\n")
     print(f"domain: {len(domain['cases'])} conics around the escape threshold")
+    holdout = build_holdout()
+    (domain_dir / "conics-holdout.json").write_text(json.dumps(holdout, indent=1, allow_nan=False) + "\n")
+    print(f"holdout: {len(holdout['cases'])} conics")
 
 
 if __name__ == "__main__":

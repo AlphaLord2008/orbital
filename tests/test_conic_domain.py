@@ -26,14 +26,20 @@ from orbital import MU_EARTH, R_EARTH, analytic, propagate
 from orbital.analytic import _solve_elliptic
 
 EPS = np.finfo(np.float64).eps
-DOMAIN = json.loads((Path(__file__).parent.parent / "fixtures" / "v1" / "domain" / "conics.json").read_text())
+_DIR = Path(__file__).parent.parent / "fixtures" / "v1" / "domain"
+DOMAIN = json.loads((_DIR / "conics.json").read_text())
+# Hold-out cases, generated after the tolerance was frozen (docs/validation/conic-domain-tolerance.md).
+HOLDOUT = json.loads((_DIR / "conics-holdout.json").read_text())
 
 
 def _f(xs):
     return np.array([float(x) for x in xs])
 
 
-@pytest.mark.parametrize("case", DOMAIN["cases"], ids=[c["name"] for c in DOMAIN["cases"]])
+ALL_CASES = [("domain", c) for c in DOMAIN["cases"]] + [("holdout", c) for c in HOLDOUT["cases"]]
+
+
+@pytest.mark.parametrize("case", [c for _, c in ALL_CASES], ids=[f"{s}:{c['name']}" for s, c in ALL_CASES])
 def test_state_at_matches_reference(case):
     r0, v0 = _f(case["inputs"]["r0"]), _f(case["inputs"]["v0"])
     e = float(case["scalars"]["e"])
@@ -49,7 +55,7 @@ def test_state_at_matches_reference(case):
         assert np.linalg.norm(v - v_ref) / max(vn, v_scale) <= tol, (case["name"], t)
 
 
-@pytest.mark.parametrize("case", DOMAIN["cases"], ids=[c["name"] for c in DOMAIN["cases"]])
+@pytest.mark.parametrize("case", [c for _, c in ALL_CASES], ids=[f"{s}:{c['name']}" for s, c in ALL_CASES])
 def test_elements_match_reference(case):
     r0, v0 = _f(case["inputs"]["r0"]), _f(case["inputs"]["v0"])
     el = analytic.elements(r0, v0)
@@ -92,3 +98,23 @@ def test_numerical_propagator_is_independent_of_the_kepler_solver():
     v0 = np.array([0.0, 1.41 * math.sqrt(MU_EARTH / r0[0])])
     traj = propagate(r0, v0, 1.0, 86_400)
     assert traj.status == "completed" and np.all(np.isfinite(traj.r))
+
+
+@pytest.mark.parametrize("e", [0.9881, 0.99996164, 1 - 2e-9])
+@pytest.mark.parametrize("E", [1e-6, 1e-4, 1e-3, 1.3e-2, 0.13, 0.9, 2.5])
+def test_residual_and_slope_are_cancellation_free(e, E):
+    """At float64 (E, e), with M the correctly rounded exact E - e sin E, the residual has
+    absolute error <= 4 eps M (so the Newton step error is <= 4 eps E, since M <= E * slope on
+    [0, pi]) and the slope relative error <= 4 eps. The textbook forms do not."""
+    from orbital.analytic import _one_minus_cos, _x_minus_sin
+
+    mp.mp.dps = 60
+    Em, em = mp.mpf(E), mp.mpf(e)
+    M = float(Em - em * mp.sin(Em))
+    exact_res = Em - em * mp.sin(Em) - mp.mpf(M)
+    exact_slope = 1 - em * mp.cos(Em)
+    x = np.array([E])
+    res = float(((1.0 - e) * x + e * _x_minus_sin(x) - M)[0])
+    slope = float(((1.0 - e) + e * _one_minus_cos(x))[0])
+    assert abs(res - float(exact_res)) <= 4 * EPS * M
+    assert abs(slope - float(exact_slope)) <= 4 * EPS * float(exact_slope)
