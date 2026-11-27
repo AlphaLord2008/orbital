@@ -12,6 +12,8 @@ interface State {
   scenario: Scenario;
   presetId: PresetId | null;
   result: RunResult | null;
+  /** The scenario that produced `result`. When it differs from `scenario`, the result is stale. */
+  resultScenario: Scenario | null;
   computing: { done: number; total: number } | null;
   error: string | null;
   /** Input → updated orbit for the last run [ms] (WA-N2), and whether it came from the cache. */
@@ -48,6 +50,7 @@ export const useStore = create<State>()((set, get) => ({
   scenario: PRESETS.V0.scenario,
   presetId: 'V0',
   result: null,
+  resultScenario: null,
   computing: null,
   error: null,
   lastRun: null,
@@ -80,6 +83,7 @@ export const useStore = create<State>()((set, get) => ({
         const fit = get().fitOnResult;
         set({
           result,
+          resultScenario: s,
           computing: null,
           t,
           fitOnResult: false,

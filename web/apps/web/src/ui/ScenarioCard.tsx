@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { PRESETS, type PresetId } from '../sim/scenario';
 import { useStore } from '../state/store';
+import { formatK } from './format';
 
 const ALT = { min: 100, max: 100_000 };
 const K = { min: 0.5, max: 1.6 };
@@ -12,13 +13,15 @@ function NumberInput(props: {
   unit: string;
   value: number;
   digits: number;
+  format?: (v: number) => string;
   min: number;
   max: number;
   onCommit: (v: number) => void;
 }) {
   const [draft, setDraft] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const shown = draft ?? props.value.toFixed(props.digits);
+  const shown =
+    draft ?? (props.format ? props.format(props.value) : props.value.toFixed(props.digits));
   const commit = () => {
     if (draft === null) return;
     const v = /^\s*\d+(\.\d*)?\s*$/.test(draft) ? Number(draft) : NaN;
@@ -110,6 +113,7 @@ export function ScenarioCard() {
         label="Speed factor"
         unit="×"
         digits={3}
+        format={formatK}
         {...K}
         value={scenario.k}
         onCommit={(v) => {
@@ -122,7 +126,7 @@ export function ScenarioCard() {
           });
         }}
       />
-      <p className="orb-caption">1 = circular · 1.414 = escape</p>
+      <p className="orb-caption">1 = circular · √2 ≈ 1.41421 = escape</p>
     </section>
   );
 }

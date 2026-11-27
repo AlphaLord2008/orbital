@@ -93,12 +93,39 @@ export function period(r: unknown, v: unknown, mu: unknown = MU_EARTH): number {
   return 2 * Math.PI * Math.sqrt(el.a ** 3 / s.mu);
 }
 
+/** x - sin x without cancellation (Taylor series for |x| < 1, 12 terms). */
+function xMinusSin(x: number): number {
+  if (Math.abs(x) >= 1) return x - Math.sin(x);
+  const x2 = x * x;
+  let term = (x * x2) / 6;
+  let sum = term;
+  for (let n = 2; n <= 12; n++) {
+    term = (-term * x2) / (2 * n * (2 * n + 1));
+    sum += term;
+  }
+  return sum;
+}
+
+/** 1 - cos x without cancellation: 2 sin²(x / 2). */
+function oneMinusCos(x: number): number {
+  const half = Math.sin(0.5 * x);
+  return 2 * half * half;
+}
+
+/**
+ * E with E - e sin E = M, for M in [-π, π]. Mirrors orbital.analytic._solve_elliptic:
+ * cancellation-free residual and slope, odd symmetry, monotone Newton from E = min(π, |M| + e).
+ */
 function solveElliptic(mean: number, e: number): number {
-  let E = mean + e * Math.sin(mean);
+  if (mean === 0) return 0;
+  const sign = mean < 0 ? -1 : 1;
+  const m = Math.abs(mean);
+  let E = Math.min(Math.PI, m + e);
+  const oneMinusE = 1 - e;
   for (let i = 0; i < KEPLER_MAX_ITERATIONS; i++) {
-    const step = (E - e * Math.sin(E) - mean) / (1 - e * Math.cos(E));
+    const step = (oneMinusE * E + e * xMinusSin(E) - m) / (oneMinusE + e * oneMinusCos(E));
     E -= step;
-    if (Math.abs(step) <= KEPLER_TOLERANCE) return E;
+    if (Math.abs(step) <= KEPLER_TOLERANCE) return sign * E;
   }
   throw new RuntimeError("Kepler's equation (elliptic) did not converge in 100 iterations");
 }

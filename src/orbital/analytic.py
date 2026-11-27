@@ -150,15 +150,48 @@ def period(r: ArrayLike, v: ArrayLike, mu: float = MU_EARTH) -> float:
 # --- Kepler's equation ----------------------------------------------------------------------
 
 
+def _x_minus_sin(x: NDArray[np.float64]) -> NDArray[np.float64]:
+    """x - sin x without cancellation: its Taylor series for |x| < 1 (12 terms, error < 1e-20 x)."""
+    x2 = x * x
+    term = x * x2 / 6.0
+    series = term.copy()
+    for n in range(2, 13):
+        term = -term * x2 / ((2 * n) * (2 * n + 1))
+        series = series + term
+    return np.where(np.abs(x) < 1.0, series, x - np.sin(x))
+
+
 def _solve_elliptic(mean: NDArray[np.float64], e: float) -> NDArray[np.float64]:
-    """E with E - e sin E = M, for M already reduced to [-pi, pi]."""
-    E = mean + e * np.sin(mean)
+    """E with E - e sin E = M, for M already reduced to [-pi, pi].
+
+    Near periapsis of a highly eccentric orbit (E small, e close to 1) the textbook residual
+    E - e sin E - M cancels, and its roundoff divided by the small slope 1 - e cos E kept
+    Newton from reaching |dE| <= 1e-15 (it settled into a +-1 ulp cycle). So:
+    - residual (1 - e) E + e (E - sin E) - M and slope (1 - e) + e (1 - cos E), both
+      cancellation-free, as for the hyperbolic case;
+    - the equation is odd in (E, M), so solve for |M| and restore the sign;
+    - start at E = min(pi, |M| + e), a bound above the root. f is increasing and convex on
+      [0, pi], so Newton from above decreases monotonically to the root with no overshoot.
+    The convergence test, iteration limit and RuntimeError are unchanged (AN-5).
+    """
+    sign = np.where(mean < 0.0, -1.0, 1.0)
+    m = np.abs(mean)
+    E = np.minimum(math.pi, m + e)
+    one_minus_e = 1.0 - e
     for _ in range(KEPLER_MAX_ITERATIONS):
-        step = (E - e * np.sin(E) - mean) / (1.0 - e * np.cos(E))
+        residual = one_minus_e * E + e * _x_minus_sin(E) - m
+        slope = one_minus_e + e * _one_minus_cos(E)
+        step = np.where(m == 0.0, E, residual / slope)  # M = 0: E = 0 exactly
         E = E - step
         if np.all(np.abs(step) <= KEPLER_TOLERANCE):
-            return E
+            return sign * E
     raise RuntimeError("Kepler's equation (elliptic) did not converge in 100 iterations")
+
+
+def _one_minus_cos(x: NDArray[np.float64]) -> NDArray[np.float64]:
+    """1 - cos x without cancellation: 2 sin^2(x / 2)."""
+    half = np.sin(0.5 * x)
+    return 2.0 * half * half
 
 
 def _sinh_minus_x(x: NDArray[np.float64]) -> NDArray[np.float64]:

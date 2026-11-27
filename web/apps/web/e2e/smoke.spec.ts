@@ -137,3 +137,37 @@ test('rapid inputs: the last input wins and every run is timed (WA-F3, WA-N2)', 
   // Regression guard on CI runners; the class A–D budgets (§6.2) are measured on reference devices.
   expect(p95).toBeLessThan(1000);
 });
+
+test('near-escape inputs compute, and a failed input never passes the old run off as new (Batch B)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.getByText(/Bound · circular orbit/)).toBeVisible({ timeout: 15_000 });
+  const k = page.getByLabel('Speed factor');
+  const kind = page.locator('.hud-kind');
+  await page.getByLabel('Preset').selectOption('X1'); // 1-day run, so near-escape ellipses fit the budget
+  await expect(kind).toContainText('Escape', { timeout: 15_000 });
+  for (const [value, shown, e] of [
+    ['1.41', '1.410', '0.98810'],
+    ['1.4142', '1.4142', '0.99996164'],
+  ] as const) {
+    await k.fill(value);
+    await k.press('Enter');
+    await expect(kind).toContainText(`e = ${e}`, { timeout: 15_000 });
+    await expect(k).toHaveValue(shown); // precision kept: 1.4142 is not shown as 1.414
+  }
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  // Inside the parabolic band the computed run is shown, the exact solution is declared absent.
+  await k.fill('1.41421356237');
+  await k.press('Enter');
+  await expect(kind).toContainText('Parabolic', { timeout: 15_000 });
+  await expect(page.getByText(/outside the exact solution's domain/)).toBeVisible();
+  // A failed input (over the step budget) keeps the old run visibly labelled as the old run.
+  await page.getByLabel('Preset').selectOption('V0');
+  await expect(kind).toContainText('circular', { timeout: 15_000 });
+  await k.fill('1.4142');
+  await k.press('Enter');
+  await expect(
+    page.getByText(/Showing the previous run \(altitude 400\.000 km, speed factor 1\.000\)/),
+  ).toBeVisible();
+});

@@ -24,3 +24,15 @@ export function duration(t: number): string {
   if (t < 7200) return `${(t / 60).toFixed(2)} min`;
   return `${(t / 3600).toFixed(3)} h`;
 }
+
+/**
+ * Speed factor for display: three decimals, or as many as the value has (up to 12), so that
+ * near-escape inputs such as 1.4142 and 1.41421 stay distinguishable.
+ */
+export function formatK(k: number): string {
+  for (let d = 3; d <= 12; d++) {
+    const s = k.toFixed(d);
+    if (Number(s) === k) return s;
+  }
+  return k.toFixed(12);
+}

@@ -31,6 +31,14 @@ export interface ExactSummary {
   readonly period: number | null;
   /** Exact time of the first surface crossing, when the conic reaches R_E. */
   readonly timeToSurface: number | null;
+  /**
+   * Whether the closed-form solution exists for this state. It does not inside the parabolic
+   * band |e − 1| < 1e-9 (outside the analytic module's domain, AN-5) or if the analytic module
+   * reports an error; the computed trajectory is still shown, and the UI says why there is no
+   * exact overlay.
+   */
+  readonly available: boolean;
+  readonly unavailableReason: string | null;
 }
 
 export interface RunResult {

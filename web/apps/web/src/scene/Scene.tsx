@@ -38,7 +38,8 @@ interface Prepared {
   forward: Float32Array[];
   reversed: Float32Array[];
   exactPath: Float32Array;
-  orbit: analytic.KeplerOrbit;
+  /** Null when the exact solution is unavailable (parabolic band): no ghost, no crossing mark. */
+  orbit: analytic.KeplerOrbit | null;
   crossing: [number, number] | null;
   extentKm: number;
 }
@@ -60,9 +61,11 @@ function prepare(result: RunResult): Prepared {
   }
   extent =
     Math.max(extent, Math.hypot(result.x.at(-1) as number, result.y.at(-1) as number)) / M_PER_UNIT;
-  const orbit = analytic.keplerOrbit([...result.run.r0], [...result.run.v0]);
+  const orbit = result.exact.available
+    ? analytic.keplerOrbit([...result.run.r0], [...result.run.v0])
+    : null;
   let crossing: [number, number] | null = null;
-  if (result.exact.timeToSurface !== null) {
+  if (orbit && result.exact.timeToSurface !== null) {
     const s = new Float64Array(4);
     orbit.stateAt(result.exact.timeToSurface, s);
     crossing = [s[0] as number, s[1] as number];
@@ -307,7 +310,7 @@ function createView(host: HTMLElement): View {
       }
     }
     const tCross = res.exact.timeToSurface;
-    if (st.showExact && (tCross === null || t <= tCross)) {
+    if (p.orbit && st.showExact && (tCross === null || t <= tCross)) {
       p.orbit.stateAt(t, tmp.s);
       const GX = (tmp.s[0] as number) / M_PER_UNIT;
       const GZ = -(tmp.s[1] as number) / M_PER_UNIT;

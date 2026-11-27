@@ -45,14 +45,34 @@ function exactSummary(r0: readonly number[], v0: readonly number[]): ExactSummar
   const el = analytic.elements(r0, v0);
   const [rp, ra] = analytic.apsides(r0, v0);
   const classification = analytic.classify(r0, v0);
-  return {
-    classification,
-    e: el.e,
-    periapsisRadius: rp,
-    apoapsisRadius: ra,
-    period: classification === 'bound' ? analytic.period(r0, v0) : null,
-    timeToSurface: rp < R_EARTH ? analytic.timeToRadius(r0, v0, R_EARTH) : null,
-  };
+  const base = { classification, e: el.e, periapsisRadius: rp, apoapsisRadius: ra };
+  if (Math.abs(el.e - 1) < analytic.PARABOLIC_TOLERANCE) {
+    return {
+      ...base,
+      period: null,
+      timeToSurface: null,
+      available: false,
+      unavailableReason: `This trajectory is within 1e-9 of parabolic (e = ${el.e.toFixed(12)}), outside the exact solution's domain. The computed trajectory is shown without an exact overlay.`,
+    };
+  }
+  try {
+    return {
+      ...base,
+      period: classification === 'bound' ? analytic.period(r0, v0) : null,
+      timeToSurface: rp < R_EARTH ? analytic.timeToRadius(r0, v0, R_EARTH) : null,
+      available: true,
+      unavailableReason: null,
+    };
+  } catch (e) {
+    if (!(e instanceof RuntimeError || e instanceof ValueError)) throw e;
+    return {
+      ...base,
+      period: null,
+      timeToSurface: null,
+      available: false,
+      unavailableReason: `Exact solution unavailable: ${e.message}`,
+    };
+  }
 }
 
 async function run(req: RunRequest): Promise<void> {
@@ -79,14 +99,29 @@ async function run(req: RunRequest): Promise<void> {
     const { indices, eps } = decimate(traj.x, traj.y, lo, hi);
     return { lo, hi, indices, eps };
   });
-  const orbit = analytic.keplerOrbit([...spec.r0], [...spec.v0]);
-  const pathEnd =
-    exact.period !== null && exact.timeToSurface === null
-      ? exact.period
-      : exact.timeToSurface !== null
-        ? exact.timeToSurface
-        : traj.tEnd;
-  const path = exactPath(orbit, 0, pathEnd);
+  // Exact path over the run's own time span: one full revolution for bound runs that last one,
+  // to the surface crossing for impacts, otherwise to the end of the run.
+  let path: Float64Array = new Float64Array(0);
+  let exactFinal = exact;
+  if (exact.available) {
+    try {
+      const orbit = analytic.keplerOrbit([...spec.r0], [...spec.v0]);
+      const pathEnd =
+        exact.timeToSurface !== null
+          ? exact.timeToSurface
+          : exact.period !== null
+            ? Math.min(exact.period, traj.tEnd)
+            : traj.tEnd;
+      path = exactPath(orbit, 0, pathEnd);
+    } catch (e) {
+      if (!(e instanceof RuntimeError || e instanceof ValueError)) throw e;
+      exactFinal = {
+        ...exact,
+        available: false,
+        unavailableReason: `Exact solution unavailable: ${e.message}`,
+      };
+    }
+  }
   if (latest !== id) return;
 
   const result: RunResult = {
@@ -101,7 +136,7 @@ async function run(req: RunRequest): Promise<void> {
     tEnd: traj.tEnd,
     revStarts: bound ? revStarts : Int32Array.of(0),
     segments,
-    exact,
+    exact: exactFinal,
     exactPath: path,
     timing: { propagateMs: t1 - t0, displayMs: performance.now() - t1 },
   };
