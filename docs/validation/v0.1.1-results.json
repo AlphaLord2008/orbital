@@ -1,0 +1,502 @@
+{
+ "kind": "registered v0.1.1 run",
+ "commit": "531147f7c9b5b28abc7f30ce6c716741f8176cdd",
+ "orbital": "0.1.0",
+ "python": "3.13.18",
+ "numpy": "2.5.5",
+ "platform": "Linux-6.18.44-fc-v880-x86_64-with-glibc2.39",
+ "cases": {
+  "V0": {
+   "inputs": {
+    "id": "V0",
+    "altitude": 400000.0,
+    "k": 1.0,
+    "dt": 1.0,
+    "span": "orbits:10",
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.558175407055
+    ]
+   },
+   "metrics": {
+    "T3": {
+     "value": 1.0861698271318139e-14,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "T4": {
+     "value": 0.0005663234123156712,
+     "gate": 0.001,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "T4-growth": {
+     "value": 0.9999999631543819,
+     "gate": 1.1,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "orbit 10 / orbit 1"
+    },
+    "T5": {
+     "value": 1.2799909035320112e-06,
+     "gate": 1e-05,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "T5-growth": {
+     "value": 0.9999999352658353,
+     "gate": 1.1,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "orbit 10 / orbit 1"
+    },
+    "T6": {
+     "value": 9.06657464704973e-07,
+     "gate": 1e-05,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "T7": {
+     "value": 38.70803553135828,
+     "gate": 100.0,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "m, at n1 = 5553"
+    },
+    "T7-10-orbits": {
+     "value": 386.13288683929,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "m, at the last sample"
+    },
+    "T8": {
+     "value": 10.10186528242604,
+     "gate": [
+      9.0,
+      11.0
+     ],
+     "op": "in",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    }
+   },
+   "pass": true
+  },
+  "P1": {
+   "inputs": {
+    "id": "P1",
+    "altitude": 35786035.93115724,
+    "k": 1.0,
+    "dt": 10.0,
+    "span": "orbits:2",
+    "r0": [
+     42164172.93115724,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     3074.659978938861
+    ]
+   },
+   "metrics": {
+    "P1-a": {
+     "value": 8.121354711378986e-15,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "P1-b": {
+     "value": 0.00036487164541171784,
+     "gate": 0.001,
+     "op": "<=",
+     "prediction": 0.0003646,
+     "band": 0.1,
+     "pass": true,
+     "note": ""
+    },
+    "P1-c": {
+     "value": 5.317494832409392e-07,
+     "gate": 1e-05,
+     "op": "<=",
+     "prediction": 5.318e-07,
+     "band": 0.1,
+     "pass": true,
+     "note": ""
+    },
+    "P1-d": {
+     "value": 3.766562420951997e-07,
+     "gate": 1e-05,
+     "op": "<=",
+     "prediction": 3.768e-07,
+     "band": 0.1,
+     "pass": true,
+     "note": ""
+    },
+    "P1-e": {
+     "value": 99.89231883008186,
+     "gate": 632.4625939673585,
+     "op": "<=",
+     "prediction": 100.0,
+     "band": 0.1,
+     "pass": true,
+     "note": "m, at n1 = 8616"
+    }
+   },
+   "pass": true
+  },
+  "E1": {
+   "inputs": {
+    "id": "E1",
+    "altitude": 400000.0,
+    "k": 1.1,
+    "dt": 1.0,
+    "span": "orbits:2",
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     8435.413992947762
+    ]
+   },
+   "metrics": {
+    "E1-a": {
+     "value": 1.0007707252443e-14,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "E1-b": {
+     "value": 0.00020235427976119896,
+     "gate": 0.0004,
+     "op": "<=",
+     "prediction": 0.0002016,
+     "band": 0.05,
+     "pass": true,
+     "note": ""
+    },
+    "E1-c": {
+     "value": 9.836240892020991e-07,
+     "gate": 1e-05,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "E1-d": {
+     "value": 1.6783152270862624e-06,
+     "gate": 0.0001,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "E1-e": {
+     "value": 65.63553047772368,
+     "gate": 500.0,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "m, at n1 = 7909"
+    },
+    "E1-f": {
+     "value": 9.987340275615457,
+     "gate": [
+      9.0,
+      11.0
+     ],
+     "op": "in",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "max error over orbit 1, dt 1 s / 0.1 s"
+    },
+    "E1-r": {
+     "value": 17624.331683981392,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "m, max position error over orbit 1"
+    }
+   },
+   "pass": true
+  },
+  "X1": {
+   "inputs": {
+    "id": "X1",
+    "altitude": 400000.0,
+    "k": 1.42,
+    "dt": 1.0,
+    "span": "steps:86400",
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     10889.352609078018
+    ]
+   },
+   "metrics": {
+    "X1-a": {
+     "value": 1.2114494074976076e-13,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "X1-b": {
+     "value": 0.00020927515881803585,
+     "gate": 0.001,
+     "op": "<=",
+     "prediction": 0.0002089,
+     "band": 0.1,
+     "pass": true,
+     "note": ""
+    },
+    "X1-c": {
+     "value": true,
+     "gate": true,
+     "op": "==",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "X1-d-1h": {
+     "value": 0.0007333496149646,
+     "gate": 0.002,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "X1-d-6h": {
+     "value": 0.0007851403453521504,
+     "gate": 0.002,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "X1-d-24h": {
+     "value": 0.000788286260128235,
+     "gate": 0.002,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "X1-e": {
+     "value": 9.996502965991112,
+     "gate": [
+      9.0,
+      11.0
+     ],
+     "op": "in",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "max error over the first hour, dt 1 s / 0.1 s"
+    }
+   },
+   "pass": true
+  },
+  "I1": {
+   "inputs": {
+    "id": "I1",
+    "altitude": 400000.0,
+    "k": 0.98,
+    "dt": 1.0,
+    "span": "until-impact",
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7515.1870118989145
+    ]
+   },
+   "metrics": {
+    "I1-a": {
+     "value": true,
+     "gate": true,
+     "op": "==",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "N = 1810"
+    },
+    "I1-b": {
+     "value": 12.294434036442908,
+     "gate": 30.0,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "s; t_N = 1810.0, t* = 1822.294434"
+    },
+    "I1-c": {
+     "value": 1.1944340364427717,
+     "gate": 3.0,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": "s; t_N = 1821.1"
+    },
+    "I1-d": {
+     "value": 10.293104232911706,
+     "gate": [
+      7.0,
+      14.0
+     ],
+     "op": "in",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "I1-e": {
+     "value": 3.1452794221963724e-15,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "I1-f": {
+     "value": 4.718286532565466e-05,
+     "gate": 0.0001,
+     "op": "<=",
+     "prediction": 4.783e-05,
+     "band": 0.1,
+     "pass": true,
+     "note": ""
+    }
+   },
+   "pass": true
+  },
+  "P2": {
+   "inputs": {
+    "id": "P2",
+    "altitude": 400000.0,
+    "k": 1.0,
+    "dt": 60.0,
+    "span": "orbits:10",
+    "r0": [
+     6778137.0,
+     0.0
+    ],
+    "v0": [
+     0.0,
+     7668.558175407055
+    ]
+   },
+   "metrics": {
+    "P2-a": {
+     "value": 1.0274579445841483e-15,
+     "gate": 1e-10,
+     "op": "<=",
+     "prediction": null,
+     "band": null,
+     "pass": true,
+     "note": ""
+    },
+    "P2-r1": {
+     "value": 0.004613142783455056,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "indicative h^2 = 4.6e-3"
+    },
+    "P2-r2": {
+     "value": 0.03626392559311829,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "indicative h/2 = 0.034"
+    },
+    "P2-r3": {
+     "value": 0.0032609475241184055,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": ""
+    },
+    "P2-r4-n1": {
+     "value": 139238.73513225876,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "m, at n1 = 92"
+    },
+    "P2-r4-10": {
+     "value": 1385797.5759326338,
+     "gate": null,
+     "op": null,
+     "prediction": null,
+     "band": null,
+     "pass": null,
+     "note": "m, after 10 orbits"
+    }
+   },
+   "pass": true
+  }
+ }
+}

@@ -1,4 +1,4 @@
-# ORBITAL CI (WA-1). Every pull request and every push to main runs all of it.
+# ORBITAL CI (WA-1, WA-2). Every pull request and every push to main runs all of it.
 # Action versions are pinned to full commit SHAs; Dependabot proposes updates.
 name: CI
 
@@ -31,6 +31,27 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e '.[dev]'
       - run: python -m pytest -q
+      # Rerun of the registered v0.1.1 cases (requirements-0.1.1). Writes nothing; any FAIL fails CI.
+      - run: python scripts/validation/run_v0_1_1.py --check
+
+  fixtures:
+    name: Fixtures fresh (mpmath reference + conformance C1-C8)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      # Pinned NumPy and OpenBLAS kernel: see BLAS_KERNEL in scripts/generate_fixtures.py.
+      - run: python -m pip install -e '.[dev]' numpy==2.5.5
+      # The TS engine is tested against these files, so they must be exactly what the
+      # authoritative Python engine and the independent reference produce today.
+      - run: python scripts/reference_mp.py
+      - run: python scripts/generate_fixtures.py
+        env:
+          OPENBLAS_CORETYPE: Haswell
+      - run: git diff --exit-code -- fixtures/ && test -z "$(git status --porcelain -- fixtures/)"
 
   preregistration:
     name: Pre-registration integrity (requirements-0.1.1 frozen)
@@ -39,6 +60,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Hash posted 2026-11-23 23:38 EST, before any registered run. Any edit fails CI.
       - run: echo "908a3366aced77ea835264452a4bc5c87dc050b0958eeb31ccb7e5a385db9165  docs/requirements-0.1.1.md" | sha256sum --check --strict
+
+  workflow-privacy:
+    name: Deploy log privacy guard
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: web/scripts/check-workflow-privacy.sh
 
   web:
     name: Web (format, lint, typecheck, unit, boundary, build, size)
@@ -61,6 +89,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm mutation
       - run: pnpm check:boundary
       - run: pnpm build
       - run: pnpm size
@@ -99,6 +128,8 @@ jobs:
           path: web/apps/web/dist
       - run: pnpm --filter @orbital/web exec playwright install --with-deps ${{ matrix.browser }}
       - run: pnpm --filter @orbital/web exec playwright test --project=${{ matrix.browser }}
+      # Engine conformance C1-C8, REF-1 and TS-V0..TS-P2 in this browser (ADR-0003 §3.3).
+      - run: pnpm exec vitest run --project browser --browser=${{ matrix.browser }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

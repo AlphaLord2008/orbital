@@ -18,7 +18,7 @@ async function watchCsp(page: Page) {
   });
 }
 
-test('shell renders with the build commit and pending conformance', async ({ page }) => {
+test('shell renders with the build commit and engine conformance', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text());
@@ -32,7 +32,7 @@ test('shell renders with the build commit and pending conformance', async ({ pag
   await expect(
     page.getByText(/Web Alpha · build [0-9a-f]{7}|Web Alpha · build unknown/),
   ).toBeVisible();
-  await expect(page.getByText('Browser engine conformance: Pending')).toBeVisible();
+  await expect(page.getByText('Browser engine conformance: Python orbital 0.1.1')).toBeVisible();
 
   expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
   expect(errors).toEqual([]);

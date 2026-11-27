@@ -21,6 +21,7 @@ classifiers = [
 dev = [
     "pytest>=8",
     "matplotlib>=3.8",
+    "mpmath==1.3.0",  # scripts/reference_mp.py only (requirements-0.1.1 §4); never imported by orbital
 ]
 
 [tool.setuptools.dynamic]

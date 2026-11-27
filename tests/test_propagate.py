@@ -202,3 +202,12 @@ def test_n4_ten_orbit_reference_run_under_ten_seconds():
     elapsed = time.perf_counter() - start
     assert traj.status == "completed"
     assert elapsed < 10.0
+
+
+def test_step_landing_exactly_on_surface_is_impact():
+    """|r_k| == body_radius counts as impact (the check is <=, not <)."""
+    r0, v0 = np.array([7.0e6, 0.0]), np.array([-1.0e3, 7.0e3])
+    surface = float(np.linalg.norm(propagate(r0, v0, 1.0, 1).r[1]))
+    traj = propagate(r0, v0, 1.0, 10, body_radius=surface)
+    assert traj.status == "impact" and traj.t.shape == (2,)
+    assert propagate(r0, v0, 1.0, 1, body_radius=surface * (1 - 1e-15)).status == "completed"

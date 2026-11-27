@@ -55,6 +55,38 @@ Measurements: proposal appendix (throwaway spike, 2026-11-23).
 - **Negative:** physics exists in two languages. Every future physics feature costs a port plus fixtures.
 - **Neutral:** no server means no persistence or analytics in Web Alpha.
 
+## 4a. Amendment: drift statistics in C1–C6 (Accepted 2026-11-26 as a post-registration amendment, rev 3)
+
+**Status.** Approved by Harshith on 2026-11-26. The amendment was made after the v0.1.1 registered run. The original comparison results and rationale below are kept unchanged.
+
+§3.3 sets derived scalars to 10⁻¹² relative. Read literally, that includes the two drift statistics in each C1–C6 summary, `max_rel_energy_drift` and `max_rel_h_drift`. WA-2 compares those two **absolutely**: |TS − Python| ≤ 10⁻¹¹. Every other derived scalar keeps 10⁻¹² relative.
+
+**When it was set.** It was chosen while writing `conformance.test.ts` (committed in 90f8bc6, 2026-11-25 19:35), after the v0.1.1 registered run (531147f, 19:23). It is not in ADR-0003 rev 1 or in `requirements-0.1.1.md`. It is a deviation from the literal text, so it needs approval rather than being self-accepted.
+
+**What it is not.** It touches no pre-registered scientific criterion:
+- the requirements-0.1.1 gates and bands (V0–P2, REF-1) are unchanged and pass on both engines;
+- the drift *gates* (e.g. h drift ≤ 10⁻¹⁰) are unchanged;
+- per-sample energy and h still conform at 10⁻¹¹ relative.
+
+**Why a relative gate on these two values is unsound.** Each is a difference of nearly equal numbers, max |E_k − E_0| / |E_0|. Angular momentum is conserved exactly by the integrator, so its drift is pure roundoff, about 10⁻¹⁴ or roughly 50 ulps. One ulp of difference in one sample changes it by tens of percent. A relative gate measures cancellation noise, not conformance.
+
+The absolute bound follows from the per-sample criterion that already exists. If every |E_k^TS − E_k^Py| ≤ ε|E_k| with ε = 10⁻¹¹, then |Δ drift| ≤ ε(2 + drift) ≈ 2 × 10⁻¹¹. The gate of 10⁻¹¹ is therefore no looser than §3.3 already implies.
+
+**Measured** in Node (the three browser runs pass the same gates; their values were not tabulated):
+
+| Run | energy drift | abs diff | rel diff | h drift | abs diff | rel diff |
+|---|---|---|---|---|---|---|
+| C1 | 1.280e-6 | 9.9e-15 | 7.7e-9 | 1.09e-14 | 2.2e-15 | 0.20 |
+| C2 | 5.317e-7 | 0 | 0 | 6.0e-15 | 0 | 0 |
+| C3 | 2.024e-4 | 1.9e-15 | 9.5e-12 | 1.00e-14 | 5.3e-16 | 0.053 |
+| C4 | 4.718e-5 | 0 | 0 | 3.1e-15 | 0 | 0 |
+| C5 | 2.552e-2 | 0 | 0 | 1.2e-13 | 0 | 0 |
+| C6 | 4.613e-3 | 1.0e-15 | 2.2e-13 | 1.0e-15 | 4.4e-16 | 0.43 |
+
+Under the literal reading, C1, C3 and C6 would fail. The root cause is cancellation in the statistic, not the engine: positions in those runs differ by at most 6.2 × 10⁻¹³ relative, against a gate of 10⁻¹¹. The absolute differences are at most 10⁻¹⁴, a thousand times inside the gate.
+
+If this clarification is rejected, the alternative is to drop the two drift statistics from conformance. They are fully determined by the per-sample energy and h, which are already gated.
+
 ## 5. Revisit when
 
 - **Add a server** when a feature needs one anyway: accounts, saved scenarios, the AI tutor, or batch computation too heavy for a laptop.
@@ -74,3 +106,5 @@ ADR-0001 §6 (resolved here), ADR-0002, ADR-0005, ADR-0008; `requirements-web-al
 | Rev | Date | Change |
 | --- | --- | --- |
 | 1 | 2026-11-23 | Accepted. |
+| 2 | 2026-11-25 | §4a proposed: drift statistics compared absolutely (10⁻¹¹). Awaiting approval. |
+| 3 | 2026-11-26 | §4a accepted as an explicitly documented post-registration amendment (approved by Harshith). |
