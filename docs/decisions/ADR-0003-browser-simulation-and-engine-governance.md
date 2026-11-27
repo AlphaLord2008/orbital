@@ -55,7 +55,9 @@ Measurements: proposal appendix (throwaway spike, 2026-11-23).
 - **Negative:** physics exists in two languages. Every future physics feature costs a port plus fixtures.
 - **Neutral:** no server means no persistence or analytics in Web Alpha.
 
-## 4a. Clarification: drift statistics in C1–C6 (Proposed, rev 2, awaiting approval)
+## 4a. Amendment: drift statistics in C1–C6 (Accepted 2026-11-26 as a post-registration amendment, rev 3)
+
+**Status.** Approved by Harshith on 2026-11-26. The amendment was made after the v0.1.1 registered run. The original comparison results and rationale below are kept unchanged.
 
 §3.3 sets derived scalars to 10⁻¹² relative. Read literally, that includes the two drift statistics in each C1–C6 summary, `max_rel_energy_drift` and `max_rel_h_drift`. WA-2 compares those two **absolutely**: |TS − Python| ≤ 10⁻¹¹. Every other derived scalar keeps 10⁻¹² relative.
 
@@ -105,3 +107,4 @@ ADR-0001 §6 (resolved here), ADR-0002, ADR-0005, ADR-0008; `requirements-web-al
 | --- | --- | --- |
 | 1 | 2026-11-23 | Accepted. |
 | 2 | 2026-11-25 | §4a proposed: drift statistics compared absolutely (10⁻¹¹). Awaiting approval. |
+| 3 | 2026-11-26 | §4a accepted as an explicitly documented post-registration amendment (approved by Harshith). |
