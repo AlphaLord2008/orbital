@@ -554,9 +554,11 @@ function createView(host: HTMLElement, onContext: (lost: boolean) => void): View
    * GPU stays idle instead of redrawing an identical image 60 times a second. Playback, damping
    * and flights change the signature every frame, so they render every frame as before.
    */
-  const sig = new Float64Array(19);
-  const sigNow = new Float64Array(19);
+  const sig = new Float64Array(24);
+  const sigNow = new Float64Array(24);
   let sigRefs: readonly unknown[] = [];
+  /** Where the Impact detail inset's viewport is: its DOM figure can move with no camera change. */
+  const insetSig = { on: 0, x: 0, y: 0, w: 0, h: 0 };
   const changed = (): boolean => {
     const st = useStore.getState();
     const p = cam.position;
@@ -581,6 +583,11 @@ function createView(host: HTMLElement, onContext: (lost: boolean) => void): View
       st.mode === 'analyze' ? 1 : 0,
       earth.mesh.visible ? 1 : 0,
       Number(host.dataset['earthTextureBytes'] ?? 0),
+      insetSig.on,
+      insetSig.x,
+      insetSig.y,
+      insetSig.w,
+      insetSig.h,
     ];
     for (let i = 0; i < vals.length; i++) sigNow[i] = vals[i] as number;
     const refs = [st.result];
@@ -607,10 +614,15 @@ function createView(host: HTMLElement, onContext: (lost: boolean) => void): View
     last = now;
     const wantsInset = frame(delta);
     earth.update(Math.min(useStore.getState().t, prepared.current?.result.tEnd ?? Infinity));
+    const vp = wantsInset ? insetViewport(host.getBoundingClientRect()) : null;
+    insetSig.on = vp ? 1 : 0;
+    insetSig.x = vp?.x ?? 0;
+    insetSig.y = vp?.y ?? 0;
+    insetSig.w = vp?.w ?? 0;
+    insetSig.h = vp?.h ?? 0;
     if (!changed() && !forceDraw) return;
     forceDraw = false;
     renderer.render(scene, cam);
-    const vp = wantsInset ? insetViewport(host.getBoundingClientRect()) : null;
     if (vp) {
       const y = size.height - vp.y - vp.h;
       renderer.setScissorTest(true);

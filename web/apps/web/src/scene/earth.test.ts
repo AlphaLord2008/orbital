@@ -18,6 +18,7 @@ describe('Earth texture selection (requirements §6.1, ADR-0004 §2)', () => {
     expect(maxTier({ ...desk, deviceMemoryGb: 4 })).toBe('4k'); // class B laptop
     expect(maxTier({ ...desk, maxTextureSize: 4096 })).toBe('4k'); // GPU cannot hold 8K
     expect(maxTier({ ...desk, screenMinPx: 390 })).toBe('4k'); // class C phone
+    expect(maxTier({ ...desk, deviceMemoryGb: undefined, touchPrimary: true })).toBe('4k'); // iPad
     expect(maxTier({ ...desk, screenMinPx: 390, deviceMemoryGb: 2 })).toBe('2k'); // class D
     expect(maxTier({ ...desk, maxTextureSize: 2048 })).toBe('2k');
   });

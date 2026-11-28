@@ -117,7 +117,8 @@ export function DriftPlot(p: {
       <div className="orb-plot__head">
         <span className="orb-plot__title">{p.title}</span>
         <span className="orb-plot__value">
-          <span className="orb-plot__value-tag">max so far</span> {sci(p.current)}
+          <span className="orb-plot__value-tag">max so far</span>{' '}
+          <span className="orb-plot__num">{sci(p.current)}</span>
         </span>
       </div>
       <div className="orb-plot__body">

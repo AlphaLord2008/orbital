@@ -111,13 +111,16 @@ test('J4: V0 is Tier 1, P2 is Tier 2 with its measured errors, and drift grows w
     ((await plot.locator('polygon').getAttribute('points')) ?? '').split(' ').length;
   await track.press('Home');
   await track.press('PageUp');
-  const v1 = num(await plot.locator('.orb-plot__value').textContent()) || 0;
+  // The headline is a decimal or d.dd × 10ⁿ; never blank, NaN or negative.
+  const SCI = /^(0|\d+(\.\d+)?( × 10⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+)?)$/;
+  const v1 = (await plot.locator('.orb-plot__num').textContent()) ?? '';
+  expect(v1).toMatch(SCI);
   const n1 = await points();
   await track.press('End');
   const n2 = await points();
   expect(n2).toBeGreaterThan(n1);
   await expect(plot).toContainText('played to');
-  expect(v1).toBeGreaterThanOrEqual(0);
+  expect((await plot.locator('.orb-plot__num').textContent()) ?? '').toMatch(SCI);
 });
 
 test('J5: a copied link reopens the identical run, tier and mode; presentation mode', async ({

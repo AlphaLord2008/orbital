@@ -73,17 +73,25 @@ const TIERS: readonly { tier: EarthTier; url: string; width: number }[] = [
 
 /**
  * The largest texture this device may load (requirements §6.1): class D (≤ 2 GB reported, or
- * a GPU limit under 4096) keeps 2K; phones and GPUs without 8192 textures stop at 4K (classes
- * B–C); class A desktops may load 8K. `deviceMemory` is Chromium-only and capped at 8.
+ * a GPU limit under 4096) keeps 2K; phones, touch-first tablets and GPUs without 8192 textures
+ * stop at 4K (classes B–C, ≤ 64 MB of texture); class A desktops may load 8K. `deviceMemory`
+ * is Chromium-only and capped at 8; Safari and Firefox do not report it, so a touch-first
+ * device (an iPad) is capped by its pointer, not its memory.
  */
 export function maxTier(opts: {
   maxTextureSize: number;
   screenMinPx: number;
   deviceMemoryGb: number | undefined;
+  touchPrimary?: boolean;
 }): EarthTier {
   const mem = opts.deviceMemoryGb;
   if (opts.maxTextureSize < 4096 || (mem !== undefined && mem <= 2)) return '2k';
-  if (opts.maxTextureSize < 8192 || opts.screenMinPx < 600 || (mem !== undefined && mem < 8))
+  if (
+    opts.maxTextureSize < 8192 ||
+    opts.screenMinPx < 600 ||
+    opts.touchPrimary === true ||
+    (mem !== undefined && mem < 8)
+  )
     return '4k';
   return '8k';
 }
@@ -115,11 +123,19 @@ type Source = HTMLImageElement | ImageBitmap;
  * for ~400 ms on the 8K texture (measured, M3 Pro, Chromium). Falls back to an <img> where
  * createImageBitmap or its options are unavailable.
  */
-function loadBitmap(url: string, onReady: (src: Source, flipped: boolean) => void): void {
+function loadBitmap(
+  url: string,
+  onReady: (src: Source, flipped: boolean) => void,
+  onFail: () => void,
+): void {
   if (typeof createImageBitmap !== 'function') {
-    loadDecoded(url, (img) => {
-      onReady(img, false);
-    });
+    loadDecoded(
+      url,
+      (img) => {
+        onReady(img, false);
+      },
+      onFail,
+    );
     return;
   }
   fetch(url)
@@ -136,9 +152,13 @@ function loadBitmap(url: string, onReady: (src: Source, flipped: boolean) => voi
         onReady(bmp, true);
       },
       () => {
-        loadDecoded(url, (img) => {
-          onReady(img, false);
-        });
+        loadDecoded(
+          url,
+          (img) => {
+            onReady(img, false);
+          },
+          onFail,
+        );
       },
     );
 }
@@ -147,12 +167,28 @@ function loadBitmap(url: string, onReady: (src: Source, flipped: boolean) => voi
  * Load an image and decode it before it reaches WebGL. `decode()` lets the browser decode
  * off the main thread, so the texture upload does not also pay for decoding.
  */
-function loadDecoded(url: string, onReady: (img: HTMLImageElement) => void): void {
+function loadDecoded(
+  url: string,
+  onReady: (img: HTMLImageElement) => void,
+  onFail: () => void,
+): void {
   const img = new Image();
   img.decoding = 'async';
+  let settled = false;
   const done = () => {
+    if (settled) return;
+    settled = true;
     onReady(img);
   };
+  img.addEventListener(
+    'error',
+    () => {
+      if (settled) return;
+      settled = true;
+      onFail();
+    },
+    { once: true },
+  );
   img.src = url;
   if (typeof img.decode === 'function') {
     img.decode().then(done, () => {
@@ -190,48 +226,63 @@ export function createEarth(
   const mesh = new Mesh(geometry, material);
   mesh.visible = false; // until the first texture arrives: never an untextured sphere
   const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  const limit = maxTier({
+  let limit = maxTier({
     maxTextureSize: renderer.capabilities.maxTextureSize,
     screenMinPx: Math.min(screen.width, screen.height),
     deviceMemoryGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    touchPrimary: typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches,
   });
   let current: { tier: EarthTier; tex: Texture } | null = null;
   let loading: EarthTier | null = null;
   let wanted: EarthTier = '2k';
   let wantedSince = 0;
+  let retried = false;
   let disposed = false;
 
   const load = (tier: EarthTier) => {
     const t = TIERS[rank(tier)];
     if (!t) return;
     loading = tier;
-    loadBitmap(t.url, (img, flipped) => {
-      loading = null;
-      if (disposed) {
-        if ('close' in img) img.close();
-        return;
-      }
-      const tex = new Texture(img);
-      tex.flipY = !flipped; // an ImageBitmap arrives already flipped
-      tex.colorSpace = SRGBColorSpace;
-      tex.anisotropy = anisotropy;
-      tex.minFilter = LinearMipmapLinearFilter; // trilinear: no shimmer when zoomed out
-      tex.magFilter = LinearFilter;
-      tex.generateMipmaps = true;
-      tex.needsUpdate = true;
-      const old = current;
-      current = { tier, tex };
-      material.uniforms['map'] = { value: tex };
-      material.needsUpdate = true;
-      mesh.visible = true;
-      if (old) {
-        old.tex.dispose(); // one Earth texture on the GPU at a time
-        const src = old.tex.image as Source;
-        if ('close' in src) src.close();
-      }
-      onTexture(tier, tierBytes(tier));
-      // A larger tier, if still wanted, starts from the next setDrawnDiameter call.
-    });
+    loadBitmap(
+      t.url,
+      (img, flipped) => {
+        loading = null;
+        if (disposed) {
+          if ('close' in img) img.close();
+          return;
+        }
+        const tex = new Texture(img);
+        tex.flipY = !flipped; // an ImageBitmap arrives already flipped
+        tex.colorSpace = SRGBColorSpace;
+        tex.anisotropy = anisotropy;
+        tex.minFilter = LinearMipmapLinearFilter; // trilinear: no shimmer when zoomed out
+        tex.magFilter = LinearFilter;
+        tex.generateMipmaps = true;
+        tex.needsUpdate = true;
+        const old = current;
+        current = { tier, tex };
+        material.uniforms['map'] = { value: tex };
+        material.needsUpdate = true;
+        mesh.visible = true;
+        if (old) {
+          old.tex.dispose(); // one Earth texture on the GPU at a time
+          const src = old.tex.image as Source;
+          if ('close' in src) src.close();
+        }
+        onTexture(tier, tierBytes(tier));
+        // A larger tier, if still wanted, starts from the next setDrawnDiameter call.
+      },
+      () => {
+        // Download or decode failed: keep the texture in use and stop asking for sharper ones
+        // this session (no retry loop on a bad connection). The first texture is retried once.
+        loading = null;
+        if (disposed) return;
+        if (!current && !retried) {
+          retried = true;
+          load(tier);
+        } else if (current) limit = current.tier;
+      },
+    );
   };
   load('2k');
 
