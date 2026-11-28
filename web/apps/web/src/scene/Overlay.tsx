@@ -123,7 +123,9 @@ export function updateOverlay(f: OverlayFrame): void {
     }
     if (els.label) {
       const w = els.label.offsetWidth;
-      place(els.label, right ? lx : lx - w, below ? ly : ly - 22);
+      // Keep the whole label inside the view on narrow screens.
+      const x = Math.min(Math.max(right ? lx : lx - w, 4), f.width - w - 4);
+      place(els.label, x, below ? ly : ly - 22);
     }
     const ux = (right ? 1 : -1) * Math.SQRT1_2;
     const uy = (below ? 1 : -1) * Math.SQRT1_2;

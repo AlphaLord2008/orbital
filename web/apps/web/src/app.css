@@ -28,6 +28,11 @@ body,
   position: absolute;
   inset: 0;
 }
+/* Phone: the view is the space above the sheet, so the orbit is framed where it can be seen. */
+.app--phone .scene,
+.app--phone .scene-overlay {
+  bottom: var(--sheet-h, 0px);
+}
 .scene--failed {
   display: grid;
   place-items: center;
@@ -62,6 +67,10 @@ body,
   position: absolute;
   left: 352px;
   bottom: 104px;
+}
+.app--analyze .scene-overlay__scale {
+  left: 372px;
+  bottom: 112px;
 }
 .mk-craft__disc {
   fill: var(--accent-spacecraft);
@@ -164,19 +173,40 @@ body,
 }
 
 /* HUD */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  z-index: 50;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+.skip-link:focus {
+  top: 12px;
+}
+.scene:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -4px;
+}
+/* The header sits on a scrim so scene labels never read through it. */
 .hud-header {
   position: absolute;
   inset: 0 0 auto;
+  z-index: 10;
   height: 60px;
   padding: 0 16px 0 24px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 16px;
-  pointer-events: none;
-}
-.hud-header > * {
-  pointer-events: auto;
+  background: linear-gradient(
+    to bottom,
+    rgb(11 14 19 / 0.92) 0%,
+    rgb(11 14 19 / 0.72) 70%,
+    rgb(11 14 19 / 0) 100%
+  );
 }
 .hud-brand {
   display: flex;
@@ -193,16 +223,22 @@ body,
   font-size: 14px;
   color: var(--text-secondary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.hud-camera {
+.hud-nav {
   justify-self: end;
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+.hud-nav .orb-btn--secondary {
+  margin-left: 8px;
 }
 .hud-left {
   position: absolute;
   left: 16px;
-  top: 76px;
+  top: 72px;
   width: 320px;
   display: grid;
   gap: 12px;
@@ -210,14 +246,27 @@ body,
 .hud-right {
   position: absolute;
   right: 16px;
-  top: 76px;
-  width: 300px;
+  top: 72px;
+  width: 312px;
+}
+.hud-scenario {
+  display: grid;
+  gap: 14px;
+}
+.hud-readouts {
+  display: grid;
+  gap: 12px;
 }
 .hud-readouts__values {
   display: grid;
   gap: 12px;
 }
-.hud-readouts.is-stale .hud-readouts__values {
+.hud-readouts__head {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.is-stale {
   opacity: var(--opacity-dimmed);
 }
 .hud-kind {
@@ -232,11 +281,16 @@ body,
 .hud-legend {
   position: absolute;
   left: 352px;
-  right: 332px;
-  top: 76px;
+  right: 344px;
+  top: 72px;
   justify-content: center;
+  flex-wrap: wrap;
   padding: 6px 10px;
   pointer-events: none;
+}
+.app--analyze .hud-legend {
+  left: 368px;
+  right: 392px;
 }
 .hud-bottom {
   position: absolute;
@@ -256,67 +310,483 @@ body,
   display: flex;
   gap: 2px;
 }
-.hud-status {
+select.orb-select {
+  appearance: none;
+  width: 100%;
+}
+.cam-seg {
+  display: flex;
+}
+.cam-seg .orb-seg__item {
+  flex: 1;
+}
+
+/* Analyze panels (approved artboard: Setup 336 px left, Diagnostics 360 px right). */
+.hud-panel {
   position: absolute;
-  left: 50%;
-  bottom: 112px;
-  transform: translateX(-50%);
-  width: min(420px, calc(100% - 32px));
+  top: 72px;
+  bottom: 104px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - 176px);
+}
+.hud-panel--left {
+  left: 16px;
+  width: 336px;
+}
+.hud-panel--right {
+  right: 16px;
+  width: 360px;
+}
+.hud-panel .orb-panel__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.hud-panel.orb-panel--collapsed {
+  bottom: auto;
+}
+.panel-collapse svg {
+  transition: transform 160ms ease;
+}
+.panel-collapse--right svg {
+  transform: rotate(180deg);
+}
+.orb-panel--collapsed .panel-collapse--left svg {
+  transform: rotate(-90deg);
+}
+.orb-panel--collapsed .panel-collapse--right svg {
+  transform: rotate(-90deg);
+}
+.setup-view {
+  display: grid;
+  gap: 12px;
+}
+.setup-switches {
+  display: grid;
   gap: 8px;
 }
-.hud-check {
+.orb-panel__section {
+  display: grid;
+  gap: 16px;
+}
+
+/* Slider: a native range input carries focus, keys and value; the design-system spans draw it. */
+.orb-slider__input {
+  position: absolute;
+  inset: -8px 0;
+  width: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+.orb-slider:has(.orb-slider__input:focus-visible) .orb-slider__thumb {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+.orb-slider--touch .orb-slider__input {
+  inset: -12px 0;
+}
+
+/* Diagnostics */
+.diag-body {
+  display: grid;
+  gap: 18px;
+}
+.diag-tier {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.diag-tier .orb-caption {
+  margin: 0;
+}
+.diag-primary {
+  display: grid;
+  gap: 8px;
+}
+/* Analyze: label left, value right, so three readouts take three lines. */
+.diag-group .orb-primary--compact {
+  gap: 2px;
+}
+.diag-group .orb-primary--compact .orb-primary__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.diag-group .orb-primary--compact .orb-primary__item dt {
+  font-size: 14px;
+}
+.diag-group {
+  display: grid;
+  gap: 8px;
+}
+.diag-group + .diag-group,
+.diag-body > .orb-disclosure {
+  padding-top: 14px;
+  border-top: 1px solid var(--line-hairline);
+}
+.diag-group__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
+.diag-group__head .orb-section-label {
+  margin: 0;
+}
+.diag-group__note {
+  font: 400 12px/16px var(--font-mono);
+  color: var(--text-tertiary);
+}
+.diag-text {
+  font-family: var(--font-sans) !important;
+}
+.diag-kv-row {
+  display: contents;
+}
+.diag-chev {
+  display: grid;
+}
+.orb-disclosure__body {
+  display: grid;
+  gap: 10px;
+}
+.orb-disclosure__body .orb-caption {
+  margin: 0;
+}
+.diag-copy {
+  justify-self: start;
+}
+.diag-computing {
+  align-items: center;
+}
+.diag-computing .orb-progress {
+  margin-top: 6px;
+}
+.plot-band {
+  fill: #e6e9ef;
+  fill-opacity: 0.85;
+}
+.plot-dot {
+  fill: var(--accent-spacecraft);
+}
+.plot-limit {
+  stroke: var(--text-tertiary);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+.plot-limit__label {
+  fill: var(--text-tertiary);
+  font: 400 10px var(--font-mono);
+}
+.orb-plot {
+  margin: 0;
+}
+.orb-tier-card {
+  display: grid;
+  gap: 10px;
+}
+
+.orb-banner p {
+  margin: 0;
+}
+.orb-banner__body {
+  display: grid;
+  gap: 4px;
+}
+/* Banners over the scene */
+.scene-banner {
+  position: absolute;
+  z-index: 11;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 32px));
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  cursor: pointer;
 }
-.hud-check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--accent-spacecraft);
-}
-select.orb-select {
-  appearance: none;
+.app--invalid .scene canvas,
+.app--invalid .scene-overlay {
+  opacity: var(--opacity-dimmed);
+  transition: opacity 160ms ease;
 }
 
-/* Phone (M1): readouts compact, side cards stack above the transport. Full mobile layouts land in WA-5/WA-6. */
-@media (max-width: 760px) {
-  .hud-brand__tag,
-  .hud-legend,
-  .hud-left {
+/* Dialogs */
+.app-dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: min(80vh, 720px);
+  padding: 0;
+  color: var(--text-primary);
+  border: 1px solid var(--line-hairline);
+}
+.app-dialog--wide {
+  width: min(760px, calc(100vw - 32px));
+}
+.app-dialog::backdrop {
+  background: rgb(5 7 10 / 0.6);
+}
+.app-dialog .orb-panel__body {
+  display: grid;
+  gap: 14px;
+  overflow: auto;
+}
+.dv-scroll {
+  max-height: 46vh;
+  overflow: auto;
+  border: 1px solid var(--line-hairline);
+  border-radius: 6px;
+}
+.dv-table {
+  width: 100%;
+}
+.dv-table thead th {
+  text-align: right;
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+}
+.dv-table tr.is-current td {
+  color: var(--accent-spacecraft);
+}
+.dv-csv {
+  justify-self: start;
+}
+.ks-list dd {
+  text-align: right;
+}
+
+/* Presentation (WA-F17): panels hidden, readouts 1.5×, high-contrast strokes. */
+.hud-header--pres {
+  display: flex;
+  justify-content: space-between;
+  height: 64px;
+}
+.hud-header--pres .hud-brand__name {
+  font-size: 18px;
+}
+.pres-readouts {
+  position: absolute;
+  left: 16px;
+  bottom: 104px;
+  display: flex;
+  gap: 48px;
+  align-items: flex-end;
+  padding: 20px 24px;
+}
+.pres-readouts__id {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.pres-readouts__name {
+  font-size: 20px;
+}
+.pres-readouts .orb-primary__item dt {
+  font-size: 18px;
+}
+.pres-readouts .orb-primary__item dd {
+  font-size: 40px;
+  line-height: 46px;
+}
+.pres-readouts .orb-primary__item .unit {
+  font-size: 20px;
+}
+.pres-readouts .orb-primary {
+  grid-template-columns: repeat(3, auto);
+  column-gap: 40px;
+}
+.app--presentation .scene-overlay__label {
+  font-size: 16px;
+}
+
+/* Phone (WA-A12): one bottom sheet, 44 px targets, safe areas. */
+.hud-header--phone {
+  height: 56px;
+  padding: 0 calc(4px + env(safe-area-inset-right)) 0 calc(16px + env(safe-area-inset-left));
+  grid-template-columns: auto 1fr auto;
+  justify-items: center;
+}
+.hud-header--phone .hud-brand__name {
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  justify-self: start;
+}
+.phone-tier {
+  position: absolute;
+  left: 16px;
+  top: 64px;
+  z-index: 9;
+}
+.phone-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  gap: 10px;
+  padding: 0 0 calc(20px + env(safe-area-inset-bottom));
+  max-height: 60dvh;
+}
+.phone-sheet > .orb-banner,
+.phone-sheet > .diag-primary {
+  margin: 0 16px;
+}
+.phone-sheet--tall {
+  top: max(30dvh, 200px);
+  max-height: none;
+  grid-template-rows: auto auto 1fr;
+  gap: 0;
+}
+.phone-sheet__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 20px;
+}
+.phone-sheet__head h2 {
+  margin: 0;
+  font: 600 17px/24px var(--font-sans);
+}
+.phone-sheet__name {
+  font-size: 15px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-sheet__tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid var(--line-hairline);
+}
+.phone-sheet__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 20px 24px;
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+.phone-touch {
+  min-height: 44px;
+}
+.phone-sheet > .diag-primary .orb-primary {
+  grid-template-columns: 1.1fr 1fr 0.9fr;
+  gap: 8px;
+}
+.phone-sheet > .diag-primary .orb-primary__item dt {
+  font-size: 13px;
+}
+.phone-sheet > .diag-primary .orb-primary__item dd {
+  font-size: 22px;
+  line-height: 28px;
+  white-space: nowrap;
+}
+.phone-sheet > .diag-primary .orb-primary__item .unit {
+  font-size: 13px;
+}
+.orb-transport--phone {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'play time rate'
+    'track track track';
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 4px;
+  padding: 0 16px;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.orb-transport--phone .orb-iconbtn--play {
+  grid-area: play;
+  width: 44px;
+  height: 44px;
+}
+.orb-transport--phone .orb-transport__time {
+  grid-area: time;
+  min-width: 0;
+}
+.orb-transport--phone .orb-seg {
+  grid-area: rate;
+}
+.orb-transport--phone .orb-seg__item {
+  min-height: 36px;
+}
+.orb-transport--phone .orb-track {
+  grid-area: track;
+  margin: 0;
+  min-height: 32px;
+}
+.app--phone .scene-overlay__scale {
+  left: 16px;
+  bottom: auto;
+  top: 104px;
+}
+.app--phone .scene-banner {
+  top: 104px;
+}
+.app--phone .scene-inset {
+  right: 8px;
+  top: 104px;
+  transform: scale(0.72);
+  transform-origin: top right;
+}
+
+/* Short landscape: the sheet becomes a side panel and the view keeps the full height. */
+@media (max-height: 500px) and (min-width: 561px) {
+  .app--phone .phone-sheet,
+  .app--phone .phone-sheet--tall {
+    left: auto;
+    top: 0;
+    width: min(380px, 50vw);
+    max-height: none;
+    border-radius: 0;
+    padding-right: env(safe-area-inset-right);
+    overflow-y: auto;
+    align-content: start;
+  }
+  .app--phone .scene,
+  .app--phone .scene-overlay {
+    bottom: 0;
+    right: var(--sheet-w, 0px);
+  }
+  .app--phone .hud-header--phone {
+    right: var(--sheet-w, 0px);
+  }
+  .app--phone .orb-sheet__handle {
     display: none;
   }
-  .hud-header {
-    grid-template-columns: 1fr auto;
+}
+
+/* Narrow phones (320–360 px): smaller readouts and transport so nothing collides. */
+@media (max-width: 360px) {
+  .phone-sheet > .diag-primary .orb-primary__item dd {
+    font-size: 18px;
+    line-height: 24px;
   }
-  .hud-camera {
-    display: none;
+  .phone-sheet > .diag-primary .orb-primary__item .unit {
+    font-size: 12px;
   }
-  .hud-right {
-    left: 8px;
-    right: 8px;
-    top: auto;
-    bottom: 104px;
-    width: auto;
+  .orb-transport--phone .orb-transport__t {
+    font-size: 14px;
   }
-  .hud-right .orb-primary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .orb-transport--phone .orb-seg__item {
+    padding: 0 8px;
   }
-  .hud-right .orb-primary__item dd {
-    font-size: 20px;
-    line-height: 26px;
+  .hud-header--phone {
+    gap: 8px;
   }
-  .hud-bottom {
-    left: 8px;
-    right: 8px;
-  }
-  .hud-transport .orb-seg,
-  .hud-meta {
-    display: none;
-  }
-  .scene-overlay__scale {
-    left: 16px;
-    bottom: 240px;
+  .hud-header--phone .orb-mode__item {
+    padding: 0 10px;
   }
 }

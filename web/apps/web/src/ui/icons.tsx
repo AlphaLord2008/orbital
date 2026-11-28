@@ -58,20 +58,50 @@ export const Chevron = () => (
     <path d="M6 9l6 6 6-6" />
   </svg>
 );
-export const ViewTop = () => (
+export const Table = () => (
   <svg {...P}>
-    <circle cx="12" cy="12" r="8" />
-    <circle cx="12" cy="12" r="2.5" />
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 10h17M3.5 14.5h17M9.5 5v14" />
   </svg>
 );
-export const ViewOblique = () => (
+export const Keyboard = () => (
   <svg {...P}>
-    <ellipse cx="12" cy="12" rx="9" ry="4" />
-    <circle cx="12" cy="12" r="2.5" />
+    <rect x="2.5" y="6" width="19" height="12" rx="2" />
+    <path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M8 14h8" />
   </svg>
 );
-export const ViewFit = () => (
+export const Present = () => (
   <svg {...P}>
-    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+    <rect x="3" y="4.5" width="18" height="12" rx="1.5" />
+    <path d="M12 16.5V20M8.5 20h7" />
+  </svg>
+);
+export const Link = () => (
+  <svg {...P}>
+    <path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1" />
+    <path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1" />
+  </svg>
+);
+export const Info = () => (
+  <svg {...P}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 11v5M12 8h.01" />
+  </svg>
+);
+export const Sliders = () => (
+  <svg {...P}>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </svg>
+);
+export const Collapse = () => (
+  <svg {...P}>
+    <path d="M15 6l-6 6 6 6" />
+  </svg>
+);
+export const Close = () => (
+  <svg {...P}>
+    <path d="M6 6l12 12M18 6L6 18" />
   </svg>
 );

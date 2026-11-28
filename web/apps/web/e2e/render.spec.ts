@@ -23,7 +23,7 @@ async function accentPixelsNear(page: Page, x: number, y: number, r: number): Pr
   // (CSSOM, not a <style> tag: the production CSP forbids inline style elements.)
   await page.evaluate(() => {
     const sel =
-      '.scene-overlay,.scene-inset,header,.hud-left,.hud-right,.hud-legend,.hud-bottom,.hud-status';
+      '.scene-overlay,.scene-inset,header,.hud-left,.hud-right,.hud-legend,.hud-bottom,.hud-panel,.scene-banner';
     for (const el of document.querySelectorAll<HTMLElement>(sel)) el.style.visibility = 'hidden';
   });
   await page.waitForTimeout(100);
@@ -107,14 +107,14 @@ for (const dpr of [1, 2]) {
         `${browserName} here has no WebGL 2: 3D rendering is not verified in this browser`,
       );
 
-      await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
       await expect(
-        page.getByRole('img', {
+        page.getByRole('application', {
           name: /Orbit view: bound orbit, completed, 55,537 computed samples/,
         }),
       ).toBeVisible();
       // Deterministic frame: top-down camera (nothing hidden behind the Earth), paused at sample 555.
-      await page.getByRole('button', { name: 'Top-down north' }).click();
+      await page.getByRole('button', { name: 'Top-down' }).click();
       const pause = page.getByRole('button', { name: 'Pause' });
       if (await pause.isVisible()) await pause.click();
       await page.getByRole('slider', { name: 'Playback time' }).press('Home');
@@ -124,8 +124,8 @@ for (const dpr of [1, 2]) {
 
       await page.reload();
       await page.setViewportSize({ width: 900, height: 700 });
-      await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 15_000 });
-      await page.getByRole('button', { name: 'Top-down north' }).click();
+      await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+      await page.getByRole('button', { name: 'Top-down' }).click();
       const pause2 = page.getByRole('button', { name: 'Pause' });
       if (await pause2.isVisible()) await pause2.click();
       await page.getByRole('slider', { name: 'Playback time' }).press('Home');
@@ -157,7 +157,7 @@ test('without WebGL the app says so and every readout still works (WA-N4)', asyn
   await expect(
     page.getByText(/The 3D view could not start because WebGL is unavailable/),
   ).toBeVisible();
-  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('.orb-stamp')).toHaveText(/sample \d/);
   await page.getByLabel('Preset').selectOption('I1');
   await expect(page.getByText('Bound · reaches the surface')).toBeVisible({ timeout: 15_000 });

@@ -78,7 +78,7 @@ test('the worker computes the ISS preset and the readouts show sample values (J1
   await watchCsp(page);
   await page.goto('/');
   // J1: orbit visible within 3 s on class A (CI runners are slower; the budget is measured in WA-6).
-  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 10_000 });
   // The 3D view itself is tested in render.spec.ts (it needs WebGL 2); this test needs only the worker.
   await expect(page.locator('main')).toHaveAttribute('data-run-steps', '55536');
   await page.getByLabel('Preset').selectOption('I1');
@@ -93,10 +93,10 @@ test('rapid inputs: the last input wins and every run is timed (WA-F3, WA-N2)', 
 }, info) => {
   test.setTimeout(90_000);
   await page.goto('/');
-  await expect(page.getByText('Bound · circular orbit')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 10_000 });
   const main = page.locator('main');
   const seq = async () => Number((await main.getAttribute('data-run-seq')) ?? 0);
-  const alt = page.getByLabel('Altitude');
+  const alt = page.getByLabel('Altitude', { exact: true });
   const times: number[] = [];
   for (let i = 0; i < 12; i++) {
     const before = await seq();
@@ -142,8 +142,8 @@ test('near-escape inputs compute, and a failed input never passes the old run of
   page,
 }) => {
   await page.goto('/');
-  await expect(page.getByText(/Bound · circular orbit/)).toBeVisible({ timeout: 15_000 });
-  const k = page.getByLabel('Speed factor');
+  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+  const k = page.getByLabel('Speed factor', { exact: true });
   const kind = page.locator('.hud-kind');
   await page.getByLabel('Preset').selectOption('X1'); // 1-day run, so near-escape ellipses fit the budget
   await expect(kind).toContainText('Escape', { timeout: 15_000 });
@@ -167,7 +167,6 @@ test('near-escape inputs compute, and a failed input never passes the old run of
   await expect(kind).toContainText('circular', { timeout: 15_000 });
   await k.fill('1.4142');
   await k.press('Enter');
-  await expect(
-    page.getByText(/Showing the previous run \(altitude 400\.000 km, speed factor 1\.000\)/),
-  ).toBeVisible();
+  await expect(page.getByText('These inputs were not run')).toBeVisible();
+  await expect(page.getByText(/last valid run \(k = 1\.000, 400 km\), dimmed/)).toBeVisible();
 });
