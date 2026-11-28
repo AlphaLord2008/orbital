@@ -270,3 +270,39 @@ test('no automatically detectable accessibility violations in Analyze, its dialo
   await page.getByRole('button', { name: 'Diagnostics' }).click();
   await scan();
 });
+
+test('CSV export holds every sample at full precision, from the exact initial state (WA-F15)', async ({
+  page,
+}) => {
+  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=a');
+  await page.getByRole('button', { name: 'Data view' }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download CSV/ }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe('orbital-h400000-k1-dt1.csv');
+  const path = await file.path();
+  const { readFileSync } = await import('node:fs');
+  const lines = readFileSync(path, 'utf8').trimEnd().split('\n');
+  expect(lines[0]).toBe('t_s,x_m,y_m,vx_m_per_s,vy_m_per_s');
+  expect(lines.length - 1).toBe(55_537); // every computed sample, as in the scene label
+  // r₀ = (R_E + h, 0), v₀ = (0, √(μ/r₀)) exactly (WA-F2), written as round-trip decimals.
+  const first = (lines[1] ?? '').split(',').map(Number);
+  expect(first.slice(0, 4)).toEqual([0, 6_378_137 + 400_000, 0, 0]);
+  expect(first[4]).toBe(Math.sqrt(3.986004418e14 / (6_378_137 + 400_000)));
+  for (const line of [lines[2], lines.at(-1)])
+    expect((line ?? '').split(',').every((v) => Number.isFinite(Number(v)))).toBe(true);
+});
+
+test('reduced motion: playback is paused on load and nothing animates by itself (WA-A7)', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await ready(page, '/');
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  const track = page.getByRole('slider', { name: 'Playback time' });
+  const t0 = await track.getAttribute('aria-valuenow');
+  await page.waitForTimeout(1500);
+  expect(await track.getAttribute('aria-valuenow')).toBe(t0);
+  await ctx.close();
+});
