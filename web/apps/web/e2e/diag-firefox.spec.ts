@@ -53,26 +53,16 @@ async function run(page: Page, name: string, fn: () => Promise<unknown>) {
   }
 }
 
+// The workflow runs this file twice: with the configured trace mode and with --trace=off.
+const MODE = process.env['DIAG_TRACE'] ?? 'config';
 for (let i = 1; i <= 8; i++) {
-  test.describe(`trace on #${String(i)}`, () => {
-    test.use({ trace: 'retain-on-failure' });
-    test('fixture page', async ({ page }) => {
-      await run(page, 'trace=retain-on-failure (config)', () => plainAt(page, 500));
-    });
+  test(`fixture page #${String(i)}`, async ({ page }) => {
+    await run(page, `trace=${MODE}, fixture page`, () => plainAt(page, 500));
   });
-  test.describe(`trace off #${String(i)}`, () => {
-    test.use({ trace: 'off' });
-    test('fixture page', async ({ page }) => {
-      await run(page, 'trace=off', () => plainAt(page, 500));
-    });
-  });
-  test.describe(`trace on, own context #${String(i)}`, () => {
-    test.use({ trace: 'retain-on-failure' });
-    test('browser.newContext', async ({ browser }) => {
-      const ctx = await browser.newContext();
-      const page = await ctx.newPage();
-      await run(page, 'trace=retain-on-failure, browser.newContext', () => plainAt(page, 500));
-      await ctx.close();
-    });
+  test(`own context #${String(i)}`, async ({ browser }) => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await run(page, `trace=${MODE}, browser.newContext`, () => plainAt(page, 500));
+    await ctx.close();
   });
 }
