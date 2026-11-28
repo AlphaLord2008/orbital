@@ -7,12 +7,22 @@ permissions:
   contents: read
 jobs:
   diag:
+    name: diag (${{ matrix.build }})
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        build: [wa5, main]
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.build == 'main' && '5009b3724103b796b67479571b418ed34d3c55c3' || github.sha }}
+          fetch-depth: 0
+      - name: Use this branch's diagnostic spec on either build
+        run: git fetch -q origin ${{ github.sha }} && git show ${{ github.sha }}:web/apps/web/e2e/diag-firefox.spec.ts > apps/web/e2e/diag-firefox.spec.ts
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           package_json_file: web/package.json
@@ -24,11 +34,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm --filter @orbital/web exec playwright install --with-deps firefox
-      - run: pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1
+      - run: pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1 -g exclude
         env:
-          DEBUG: pw:browser
-          DIAG_TRACE: retain-on-failure
-      - run: pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1 --trace=off
-        env:
-          DEBUG: pw:browser
-          DIAG_TRACE: 'off'
+          DIAG_BUILD: ${{ matrix.build }}

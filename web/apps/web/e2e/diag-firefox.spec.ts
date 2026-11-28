@@ -1,5 +1,5 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 5 (tracing). Round 2: the content process
+ * TEMPORARY diagnostic (diag branch only, never merged), round 6 (main vs WA-5, DOM exclusion). Round 2: the content process
  * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
  * rates per method, interleaved so position in the run cannot explain a difference.
  */
@@ -45,24 +45,40 @@ async function run(page: Page, name: string, fn: () => Promise<unknown>) {
   });
   try {
     await fn();
-    console.log(`DIAG5 ${name} ok`);
+    console.log(`DIAG6 ${name} ok`);
   } catch (e) {
     console.log(
-      `DIAG5 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
+      `DIAG6 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
     );
   }
 }
 
-// The workflow runs this file twice: with the configured trace mode and with --trace=off.
-const MODE = process.env['DIAG_TRACE'] ?? 'config';
-for (let i = 1; i <= 8; i++) {
-  test(`fixture page #${String(i)}`, async ({ page }) => {
-    await run(page, `trace=${MODE}, fixture page`, () => plainAt(page, 500));
-  });
-  test(`own context #${String(i)}`, async ({ browser }) => {
-    const ctx = await browser.newContext();
-    const page = await ctx.newPage();
-    await run(page, `trace=${MODE}, browser.newContext`, () => plainAt(page, 500));
-    await ctx.close();
-  });
+const BUILD = process.env['DIAG_BUILD'] ?? 'wa5';
+
+async function plainExcluding(page: Page, exclude: string | null) {
+  await ready(page, APP);
+  await page.waitForTimeout(500);
+  await page.evaluate(AXE);
+  return page.evaluate(async (ex) => {
+    const axe = (
+      window as unknown as { axe: { run: (c: unknown) => Promise<{ violations: unknown[] }> } }
+    ).axe;
+    return (await axe.run(ex ? { exclude: [ex] } : document)).violations.length;
+  }, exclude);
 }
+
+const EXCLUDES = [
+  null,
+  '.scene',
+  '.scene-overlay',
+  '.hud-header',
+  '.hud-left',
+  '.hud-right',
+  '.hud-bottom',
+  '.hud-legend',
+];
+for (let i = 1; i <= 4; i++)
+  for (const ex of EXCLUDES)
+    test(`exclude ${ex ?? 'nothing'} #${String(i)}`, async ({ page }) => {
+      await run(page, `build=${BUILD} exclude=${ex ?? 'nothing'}`, () => plainExcluding(page, ex));
+    });
