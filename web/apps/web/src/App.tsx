@@ -18,8 +18,11 @@ import { classification, formatE, useEvidence } from './ui/runView';
 import { PresetSelect, ScenarioFields } from './ui/ScenarioControls';
 import { Transport } from './ui/Transport';
 
-// Phones in portrait, and any short landscape screen where the desktop panels cannot fit (WA-A12).
-const PHONE = '(max-width: 760px), (max-height: 500px)';
+// Phones in portrait, any short landscape screen where the desktop panels cannot fit (WA-A12),
+// and portrait tablets up to 900 px wide, where two side panels would cover the orbit: they get
+// the bottom sheet (the design system's drawer layout for tablets).
+const PHONE =
+  '(max-width: 760px), (max-height: 500px), (max-width: 900px) and (orientation: portrait)';
 function usePhone(): boolean {
   return useSyncExternalStore(
     (cb) => {

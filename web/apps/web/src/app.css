@@ -873,6 +873,19 @@ select.orb-select {
   transform-origin: top right;
 }
 
+/* Portrait tablets on the sheet layout: a sheet as wide as a phone's reads better than one
+   stretched across 900 px; the view keeps the full width above it. */
+@media (min-width: 600px) and (orientation: portrait) {
+  .app--phone .phone-sheet {
+    left: 50%;
+    right: auto;
+    width: min(640px, 100%);
+    transform: translateX(-50%);
+    border-left: 1px solid var(--line-hairline);
+    border-right: 1px solid var(--line-hairline);
+  }
+}
+
 /* Short landscape: the sheet becomes a side panel and the view keeps the full height. */
 @media (max-height: 500px) and (min-width: 561px) {
   .app--phone .phone-sheet,
@@ -960,4 +973,13 @@ select.orb-select {
 .orb-dialog__body {
   scrollbar-width: thin;
   scrollbar-color: var(--line-control) transparent;
+}
+
+.orb-legend__item {
+  white-space: nowrap;
+}
+@media (max-width: 1180px) {
+  .hud-brand__tag {
+    display: none;
+  }
 }

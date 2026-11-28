@@ -32,6 +32,8 @@ export interface OverlayFrame {
   } | null;
   width: number;
   height: number;
+  /** The part of the view no panel covers (host px): labels stay inside it. */
+  free: { x0: number; x1: number; y0: number; y1: number };
 }
 
 interface Els {
@@ -122,8 +124,9 @@ export function updateOverlay(f: OverlayFrame): void {
   if (m) {
     placeSvg(m.hidden ? els.behind : els.marker, m.x, m.y);
     // Label below-left of the ring with a leader, flipped near the edges.
-    const right = m.x < f.width / 2; // label toward the centre, away from the side panels
-    const below = m.y < f.height - 120;
+    // Label toward the centre of the free region, away from the side panels.
+    const right = m.x < (f.free.x0 + f.free.x1) / 2;
+    const below = m.y < f.free.y1 - 120;
     const lx = right ? m.x + 30 : m.x - 30;
     const ly = below ? m.y + 34 : m.y - 34;
     const text = m.hidden ? 'Spacecraft behind Earth' : 'Spacecraft';
@@ -133,8 +136,8 @@ export function updateOverlay(f: OverlayFrame): void {
     }
     if (els.label) {
       const w = els.label.offsetWidth;
-      // Keep the whole label inside the view on narrow screens.
-      const x = Math.min(Math.max(right ? lx : lx - w, 4), f.width - w - 4);
+      // Keep the whole label inside the free region (never under a panel).
+      const x = Math.min(Math.max(right ? lx : lx - w, f.free.x0 + 4), f.free.x1 - w - 4);
       const y = below ? ly : ly - 22;
       place(els.label, x, y);
       labelBox = { x0: x - 6, y0: y - 6, x1: x + w + 6, y1: y + els.label.offsetHeight + 6 };

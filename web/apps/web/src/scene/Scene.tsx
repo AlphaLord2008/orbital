@@ -124,7 +124,17 @@ function createView(host: HTMLElement): View {
    * offset (px) and fractions of the canvas. The orbit is framed there, not under a panel.
    * `x`/`y` ease toward the target so a mode switch or a collapsed panel glides, not jumps.
    */
-  const free = { x: 0, y: 0, tx: 0, ty: 0, w: 1, h: 1, checked: 0 };
+  const free = {
+    x: 0,
+    y: 0,
+    tx: 0,
+    ty: 0,
+    w: 1,
+    h: 1,
+    checked: 0,
+    /** The free region in host px, for overlay label placement. */
+    box: { x0: 0, x1: 1, y0: 0, y1: 1 },
+  };
   const measureFree = () => {
     const H = host.getBoundingClientRect();
     if (H.width < 1 || H.height < 1) return;
@@ -141,8 +151,8 @@ function createView(host: HTMLElement): View {
       else if (side === 'top') top = Math.max(top, r.bottom);
       else if (side === 'bottom') bottom = Math.min(bottom, r.top);
     }
-    // Panels that leave too little room (narrow tablets) do not reframe the view.
-    if (right - left < H.width * 0.4) {
+    // Panels that leave too little room do not reframe the view.
+    if (right - left < H.width * 0.22) {
       left = H.left;
       right = H.right;
     }
@@ -154,6 +164,7 @@ function createView(host: HTMLElement): View {
     free.ty = (top + bottom) / 2 - (H.top + H.height / 2);
     free.w = (right - left) / H.width;
     free.h = (bottom - top) / H.height;
+    free.box = { x0: left - H.left, x1: right - H.left, y0: top - H.top, y1: bottom - H.top };
   };
   const applyOffset = () => {
     cam.setViewOffset(size.width, size.height, -free.x, -free.y, size.width, size.height);
@@ -328,13 +339,18 @@ function createView(host: HTMLElement): View {
       inset: null,
       width: size.width,
       height: size.height,
+      free: free.box,
     };
     const dist = cam.position.length();
     const kmPx = kmPerPixel(cam, dist, size.height);
     // Earth's drawn diameter in device pixels picks the texture resolution (earth.ts).
-    earth.setDrawnDiameter(
-      ((2 * EARTH_RADIUS_KM) / kmPx) * renderer.getPixelRatio() * (dist > EARTH_RADIUS_KM ? 1 : 0),
-    );
+    // Not during a preset flight: the size it passes through is not the size it settles at.
+    if (!flight.current)
+      earth.setDrawnDiameter(
+        ((2 * EARTH_RADIUS_KM) / kmPx) *
+          renderer.getPixelRatio() *
+          (dist > EARTH_RADIUS_KM ? 1 : 0),
+      );
     for (const l of Object.values(lines)) updateDashes(l, kmPx);
     const project = (X: number, Y: number, Z: number): Pt | null => {
       tmp.v.set(X, Y, Z).project(cam);
@@ -515,6 +531,56 @@ function createView(host: HTMLElement): View {
     return frame.inset !== null;
   };
 
+  /**
+   * Render on demand: a frame is drawn only when something it shows changed (playback time,
+   * camera, projection, size, run, view toggles, Earth texture). Paused with a still camera, the
+   * GPU stays idle instead of redrawing an identical image 60 times a second. Playback, damping
+   * and flights change the signature every frame, so they render every frame as before.
+   */
+  const sig = new Float64Array(19);
+  const sigNow = new Float64Array(19);
+  let sigRefs: readonly unknown[] = [];
+  const changed = (): boolean => {
+    const st = useStore.getState();
+    const p = cam.position;
+    const q = cam.quaternion;
+    const vals = [
+      p.x,
+      p.y,
+      p.z,
+      q.x,
+      q.y,
+      q.z,
+      q.w,
+      free.x,
+      free.y,
+      size.width,
+      size.height,
+      renderer.getPixelRatio(),
+      st.t,
+      st.showExact ? 1 : 0,
+      st.showVelocity ? 1 : 0,
+      st.presentation ? 1 : 0,
+      st.mode === 'analyze' ? 1 : 0,
+      earth.mesh.visible ? 1 : 0,
+      Number(host.dataset['earthTextureBytes'] ?? 0),
+    ];
+    for (let i = 0; i < vals.length; i++) sigNow[i] = vals[i] as number;
+    const refs = [st.result];
+    let diff = refs.length !== sigRefs.length || refs.some((r, i) => r !== sigRefs[i]);
+    for (let i = 0; i < sig.length && !diff; i++) if (sig[i] !== sigNow[i]) diff = true;
+    if (diff) {
+      sig.set(sigNow);
+      sigRefs = refs;
+    }
+    return diff;
+  };
+  let forceDraw = true;
+  const onRestored = () => {
+    forceDraw = true;
+  };
+  renderer.domElement.addEventListener('webglcontextrestored', onRestored);
+
   let raf = 0;
   let last = performance.now();
   const loop = (now: number) => {
@@ -523,6 +589,8 @@ function createView(host: HTMLElement): View {
     last = now;
     const wantsInset = frame(delta);
     earth.update(Math.min(useStore.getState().t, prepared.current?.result.tEnd ?? Infinity));
+    if (!changed() && !forceDraw) return;
+    forceDraw = false;
     renderer.render(scene, cam);
     const vp = wantsInset ? insetViewport(host.getBoundingClientRect()) : null;
     if (vp) {
@@ -552,6 +620,7 @@ function createView(host: HTMLElement): View {
       controls.dispose();
       host.removeEventListener('keydown', onKey);
       renderer.domElement.removeEventListener('webglcontextlost', onLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', onRestored);
       Object.values(lines).forEach((l) => {
         l.geometry.dispose();
         l.material.dispose();
