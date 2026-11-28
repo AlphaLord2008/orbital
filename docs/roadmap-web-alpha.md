@@ -92,6 +92,21 @@ Accessibility (axe zero, keyboard and screen-reader passes); responsive layouts;
 
 **Accepted when:** every budget in requirements §6 is met or has an exception you approved; accessibility evidence is recorded.
 
+**Status (2026-11-28, branch `wa6/visual-perf-hardening`, draft PR; evidence in `docs/validation/wa6/`).** Not yet accepted.
+
+| Carry-over or item | State |
+|---|---|
+| NASA texture provenance | **Done.** Derived from the NASA original, hash-checked (`wa6/earth-texture.md`) |
+| Firefox 3D rendering | **Verified on a GPU** (macOS, Playwright Firefox, WebGL 2) with `playwright.hw.config.ts`; stock Firefox on Windows/Linux not verified |
+| Reference-device performance (A1) | Class A machine type measured: 60 fps, p95 16.7 ms, INP 32 ms, normal p95 ≤ 19 ms, large 205–224 ms. **Classes B–D not measured** |
+| Texture memory per class | One texture resident (was two); 170.7 / 42.7 / 10.7 MB by construction; device measurement still due |
+| Accessibility | axe 0 in three engines, Lighthouse 100, keyboard path and reduced motion checked. **VoiceOver and NVDA passes not done** |
+| Responsive layouts | Checked from 320 × 568 to 1920 × 1080, portrait tablets moved to the sheet. **No real phone yet** |
+| J1–J7 automated | J2–J6, J8, CSV, reduced motion, context loss, unrunnable links in e2e; J1 covered by the smoke and perf tests; J7 (≥ 30 fps on class C) needs a phone |
+| Visual excellence (added to WA-6 by the owner, 2026-11-27) | Earth, drift plots, methodology, presentation, framing; before/after in `wa6/screens/` |
+
+Remaining for acceptance: §7 of `docs/validation/wa6/README.md` (classes B–D, real phone, screen readers, stock Safari and Firefox).
+
 ### WA-7 — Usability test (8–12 h)
 
 About five moderated think-aloud sessions on the release candidate (protocol in the proposal §15), with tasks from J1–J5. Report in `docs/validation/usability-alpha.md`.
