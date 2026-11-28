@@ -24,4 +24,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm --filter @orbital/web exec playwright install --with-deps firefox
-      - run: pnpm --filter @orbital/web exec playwright --version && pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1
+      - run: pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1
+        env:
+          DEBUG: pw:browser

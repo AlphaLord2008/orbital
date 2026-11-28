@@ -1,102 +1,75 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged): isolate which page state, DOM region and
- * axe rule crash Firefox's content process. Every attempt runs in a fresh context so one crash
- * does not hide the rest; results are printed as a table.
+ * TEMPORARY diagnostic (diag branch only, never merged), round 2. Round 1 showed plain axe.run
+ * passes on every page, region and rule in Firefox, so this isolates what differs in the failing
+ * test: AxeBuilder (runPartial), the fixture page, and time since load.
  */
-import { test, type Browser } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname } from 'node:path';
-
-const require = createRequire(import.meta.url);
-const AXE = readFileSync(
-  require.resolve('axe-core/axe.min.js', {
-    paths: [dirname(require.resolve('@axe-core/playwright'))],
-  }),
-  'utf8',
-);
-
-async function attempt(
-  browser: Browser,
-  url: string,
-  opts: { rules?: string[]; include?: string },
-): Promise<string> {
-  const ctx = await browser.newContext();
-  const page = await ctx.newPage();
-  try {
-    await page.goto(url);
-    await page.locator('main[data-run-seq]').waitFor({ timeout: 15_000 });
-    await page.waitForTimeout(500);
-    await page.evaluate(AXE);
-    const n = await page.evaluate(
-      async ({ rules, include }) => {
-        const w = window as unknown as {
-          axe: { run: (c: unknown, o: unknown) => Promise<{ violations: unknown[] }> };
-        };
-        const r = await w.axe.run(
-          include ? { include: [include] } : document,
-          rules ? { runOnly: { type: 'rule', values: rules } } : {},
-        );
-        return r.violations.length;
-      },
-      { rules: opts.rules, include: opts.include },
-    );
-    return `ok (${String(n)} violations)`;
-  } catch (e) {
-    return `FAIL: ${(e as Error).message.split('\n')[0] ?? ''}`;
-  } finally {
-    await ctx.close().catch(() => undefined);
-  }
-}
+import { expect, test, type Page } from '@playwright/test';
 
 const E1A = '/?v=1&h=400000&k=1.1&dt=1&d=2o&m=a';
-const PAGES: Record<string, string> = {
-  'explore V0': '/?v=1&h=400000&k=1&dt=1&d=10o&m=e',
-  'analyze V0': '/?v=1&h=400000&k=1&dt=1&d=10o&m=a',
-  'analyze E1': E1A,
-  'analyze k1.11': '/?v=1&h=400000&k=1.11&dt=1&d=2o&m=a',
-};
 
-test('diag: which page crashes a full axe run', async ({ browser }) => {
-  test.setTimeout(300_000);
-  for (const [name, url] of Object.entries(PAGES))
-    console.log(`DIAG page | ${name} | ${await attempt(browser, url, {})}`);
+async function ready(page: Page, url: string) {
+  page.on('console', (m) => {
+    console.log(`DIAG console ${m.type()}: ${m.text().slice(0, 300)}`);
+  });
+  page.on('crash', () => {
+    console.log(`DIAG crash event at ${new Date().toISOString()}`);
+  });
+  await page.goto(url);
+  await expect(page.locator('main')).toHaveAttribute('data-run-seq', /\d+/, { timeout: 15_000 });
+  console.log(`DIAG ready at ${new Date().toISOString()}`);
+}
+
+async function builder(page: Page, legacy = false) {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const b = new AxeBuilder({ page });
+  if (legacy) b.setLegacyMode(true);
+  const r = await b.analyze();
+  return r.violations.length;
+}
+
+test('A: exact failing flow (AxeBuilder, Analyze E1)', async ({ page }) => {
+  await ready(page, E1A);
+  console.log(`DIAG A violations ${String(await builder(page))}`);
 });
 
-test('diag: which region of Analyze E1 crashes', async ({ browser }) => {
-  test.setTimeout(300_000);
-  for (const sel of [
-    '.hud-header',
-    '#controls',
-    '#diagnostics',
-    '.hud-bottom',
-    '.hud-legend',
-    '#scene',
-    '.scene-overlay',
-    '#diagnostics .orb-disclosure',
-    '#diagnostics .orb-plot',
-    '#diagnostics .orb-gates',
-    '#controls .orb-slider',
-    '#controls .setup-view',
-  ])
-    console.log(`DIAG region | ${sel} | ${await attempt(browser, E1A, { include: sel })}`);
+test('B: AxeBuilder legacy mode, Analyze E1', async ({ page }) => {
+  await ready(page, E1A);
+  console.log(`DIAG B violations ${String(await builder(page, true))}`);
 });
 
-test('diag: which axe rule crashes on Analyze E1', async ({ browser }) => {
-  test.setTimeout(900_000);
-  const ctx = await browser.newContext();
-  const page = await ctx.newPage();
-  await page.goto('/');
-  await page.evaluate(AXE);
-  const rules = await page.evaluate(() =>
-    (window as unknown as { axe: { getRules: () => { ruleId: string }[] } }).axe
-      .getRules()
-      .map((r) => r.ruleId),
-  );
-  await ctx.close();
-  for (const id of rules) {
-    const r = await attempt(browser, E1A, { rules: [id] });
-    if (!r.startsWith('ok')) console.log(`DIAG rule | ${id} | ${r}`);
+test('C: no axe at all, Analyze E1 idle 8 s', async ({ page }) => {
+  await ready(page, E1A);
+  for (let i = 0; i < 16; i++) {
+    await page.waitForTimeout(500);
+    console.log(
+      `DIAG C t+${String((i + 1) * 0.5)}s alive=${String(await page.evaluate(() => 1 + 1))}`,
+    );
   }
-  console.log(`DIAG rule | (${String(rules.length)} rules tried; only failures listed)`);
+});
+
+test('D: AxeBuilder on Explore V0 (control)', async ({ page }) => {
+  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=e');
+  console.log(`DIAG D violations ${String(await builder(page))}`);
+});
+
+test('E: AxeBuilder on Analyze V0', async ({ page }) => {
+  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=a');
+  console.log(`DIAG E violations ${String(await builder(page))}`);
+});
+
+test('F: Analyze E1 paused, then AxeBuilder', async ({ page }) => {
+  await ready(page, E1A);
+  const pause = page.getByRole('button', { name: 'Pause' });
+  if (await pause.isVisible()) await pause.click();
+  console.log(`DIAG F violations ${String(await builder(page))}`);
+});
+
+test('G: Explore V0 idle 8 s (control for C)', async ({ page }) => {
+  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=e');
+  for (let i = 0; i < 16; i++) {
+    await page.waitForTimeout(500);
+    console.log(
+      `DIAG G t+${String((i + 1) * 0.5)}s alive=${String(await page.evaluate(() => 1 + 1))}`,
+    );
+  }
 });
