@@ -141,6 +141,54 @@ for (const dpr of [1, 2]) {
   });
 }
 
+test('WebGL context loss shows a message, and the view draws the orbit again after restore (WA-E5)', async ({
+  page,
+  browserName,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('/');
+  test.skip(
+    (await webgl2Renderer(page)) === null,
+    `${browserName} here has no WebGL 2: context loss is not verified in this browser`,
+  );
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.getByRole('button', { name: 'Top-down' }).click();
+  const pause = page.getByRole('button', { name: 'Pause' });
+  if (await pause.isVisible()) await pause.click();
+  await page.getByRole('slider', { name: 'Playback time' }).press('Home');
+  await page.getByRole('slider', { name: 'Playback time' }).press('PageUp');
+  await page.waitForTimeout(1200);
+  await page.evaluate(() => {
+    const c = document.querySelector<HTMLCanvasElement>('.scene canvas');
+    const ext = c?.getContext('webgl2')?.getExtension('WEBGL_lose_context');
+    if (!ext) throw new Error('WEBGL_lose_context unavailable');
+    // Keep the extension: getExtension() returns null while the context is lost.
+    (window as unknown as { __lc: WEBGL_lose_context }).__lc = ext;
+    ext.loseContext();
+  });
+  await expect(page.getByText(/The 3D view lost its graphics context/)).toBeVisible();
+  // Readouts keep working while the view is gone.
+  await expect(page.locator('.orb-stamp').first()).toHaveText(/sample \d/);
+  await page.evaluate(() => {
+    (window as unknown as { __lc: WEBGL_lose_context }).__lc.restoreContext();
+  });
+  await expect(page.getByText(/The 3D view lost its graphics context/)).toBeHidden({
+    timeout: 10_000,
+  });
+  await page.waitForTimeout(800);
+  const m = await markerCentre(page);
+  expect(
+    await accentPixelsNear(page, m.x, m.y, 4),
+    'orbit drawn again after restore',
+  ).toBeGreaterThan(3);
+  expect(errors).toEqual([]);
+});
+
 test('without WebGL the app says so and every readout still works (WA-N4)', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));

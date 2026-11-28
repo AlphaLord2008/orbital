@@ -123,7 +123,8 @@ export const useStore = create<State>()((set, get) => ({
             seq: (get().lastRun?.seq ?? 0) + 1,
           },
         });
-        if (fit) get().requestCamera(prev ? 'fit' : 'oblique');
+        // First run: Oblique, except an impact, which is framed on its impact point (Fit).
+        if (fit) get().requestCamera(prev || result.status === 'impact' ? 'fit' : 'oblique');
         writeUrl(s, get().mode);
       },
       onError: (_kind, message) => {
@@ -200,6 +201,15 @@ export const useStore = create<State>()((set, get) => ({
   initFromUrl(search) {
     const d = decodeScenario(search);
     if (d.ok === true) {
+      // Every field can be in range while the whole cannot run (an unbound trajectory given
+      // in orbits, or more steps than the budget). Say why and open V0, as for any bad link;
+      // never leave the page waiting for a run that will not start.
+      const b = buildRun(d.scenario);
+      if (!b.ok) {
+        get().loadPreset('V0');
+        set({ linkError: b.message });
+        return;
+      }
       const preset = (Object.keys(PRESETS) as PresetId[]).find((id) =>
         sameScenario(PRESETS[id].scenario, d.scenario),
       );

@@ -301,7 +301,9 @@ export function Advanced({ r, ev }: { r: RunResult; ev: Evidence }) {
         k={sv.k}
         n={sv.n}
         tPlayed={sv.t}
+        tEnd={r.tEnd}
         limit={ev.gates.energy !== null ? { value: ev.gates.energy, label: gateLabel } : null}
+        legend={!circular}
       />
       {circular ? (
         <DriftPlot
@@ -312,11 +314,14 @@ export function Advanced({ r, ev }: { r: RunResult; ev: Evidence }) {
           k={sv.k}
           n={sv.n}
           tPlayed={sv.t}
+          tEnd={r.tEnd}
           limit={ev.gates.radius !== null ? { value: ev.gates.radius, label: gateLabel } : null}
+          legend
         />
       ) : null}
       <p className="orb-caption">
-        Drift shows the run agrees with itself, up to the sample played (running maximum).{' '}
+        Drift is how far the run disagrees with itself: the line is the largest drift up to the
+        sample played (the number above), the band the drift at each sample.{' '}
         {ev.tier === 3
           ? 'It is not accuracy, and no tested case measures accuracy for this run.'
           : `Accuracy against the exact solution is what ${String(ev.id)} measures, below.`}

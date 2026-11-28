@@ -3,6 +3,7 @@
  * (v0.1.1-results.json) or the published v0.1.0 report rows, never typed in by hand.
  */
 import { CONFORMS_TO_PYTHON, ENGINE_VERSION, MU_EARTH, R_EARTH } from '@orbital/engine';
+import { useEffect, useState } from 'react';
 import { StatusDone, TierBadge } from '../evidence/TierBadge';
 import { evidenceFor, sci, V0_V010_ROWS, V011_RUN } from '../evidence/tiers';
 import { buildRun, PRESETS, type PresetId } from '../sim/scenario';
@@ -30,6 +31,31 @@ const SECTIONS = [
   ['credits', 'Credits'],
 ] as const;
 
+/** The section being read, for the table of contents (aria-current). */
+function useActiveSection(): string {
+  const [active, setActive] = useState<string>(SECTIONS[0][0]);
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const seen = new Map<string, boolean>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) seen.set(e.target.id, e.isIntersecting);
+        const first = SECTIONS.find(([id]) => seen.get(id));
+        if (first) setActive(first[0]);
+      },
+      { rootMargin: '-84px 0px -55% 0px' },
+    );
+    for (const [id] of SECTIONS) {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    }
+    return () => {
+      io.disconnect();
+    };
+  }, []);
+  return active;
+}
+
 function Section(p: { id: (typeof SECTIONS)[number][0]; children: React.ReactNode }) {
   const i = SECTIONS.findIndex(([id]) => id === p.id);
   const title = SECTIONS[i]?.[1] ?? '';
@@ -49,6 +75,7 @@ export function Methodology() {
   // ω·Δt·r/2 at 400 km with Δt = 1 s, where ω = √(μ/r³).
   const r400 = R_EARTH + 400e3;
   const wobble = Math.sqrt(MU_EARTH / r400 ** 3) * r400 * 0.5;
+  const active = useActiveSection();
   return (
     <div className="orb m-page">
       <header className="m-header">
@@ -62,9 +89,11 @@ export function Methodology() {
           <p className="orb-section-label">Methodology</p>
           <h1 id="m-title">How ORBITAL computes an orbit</h1>
           <p className="m-lede">
-            Every trajectory is integrated step by step by the physics engine. Nothing is drawn from
-            a formula. This page states the model, the evidence behind each preset, and what the app
-            does not model.
+            Every computed trajectory, the orange line and the spacecraft, is integrated step by
+            step by the physics engine; none of it is drawn from a formula. The exact solution, the
+            cyan dotted line and its ghost marker, is the opposite: closed-form two-body formulas,
+            shown only to compare against, never integrated. This page states the model, the
+            evidence behind each preset, and what the app does not model.
           </p>
           <dl className="m-stats">
             {(
@@ -107,7 +136,7 @@ export function Methodology() {
           <ol>
             {SECTIONS.map(([id, title], i) => (
               <li key={id}>
-                <a href={`#${id}`}>
+                <a href={`#${id}`} aria-current={active === id ? 'location' : undefined}>
                   <span className="m-toc__n">{String(i + 1).padStart(2, '0')}</span>
                   {title}
                 </a>
@@ -166,9 +195,54 @@ export function Methodology() {
               Each step updates velocity first, then position with the new velocity. This is
               semi-implicit (symplectic) Euler with a fixed step Δt:
             </p>
-            <pre className="m-eq">
-              {'v(k+1) = v(k) + Δt · a(r(k))      a(r) = −μ r / |r|³\nr(k+1) = r(k) + Δt · v(k+1)'}
-            </pre>
+            <div
+              className="m-eq"
+              role="math"
+              aria-label="v at k plus 1 equals v at k plus delta t times a of r at k; r at k plus 1 equals r at k plus delta t times v at k plus 1; a of r equals minus mu r over the cube of the length of r."
+            >
+              <span className="m-eq__lhs">
+                <b>v</b>
+                <sub>
+                  <var>k</var>+1
+                </sub>
+              </span>
+              <span className="m-eq__rhs">
+                = <b>v</b>
+                <sub>
+                  <var>k</var>
+                </sub>{' '}
+                + Δ<var>t</var> · <b>a</b>(<b>r</b>
+                <sub>
+                  <var>k</var>
+                </sub>
+                )
+              </span>
+              <span className="m-eq__n">(1)</span>
+              <span className="m-eq__lhs">
+                <b>r</b>
+                <sub>
+                  <var>k</var>+1
+                </sub>
+              </span>
+              <span className="m-eq__rhs">
+                = <b>r</b>
+                <sub>
+                  <var>k</var>
+                </sub>{' '}
+                + Δ<var>t</var> · <b>v</b>
+                <sub>
+                  <var>k</var>+1
+                </sub>
+              </span>
+              <span className="m-eq__n">(2)</span>
+              <span className="m-eq__lhs">
+                <b>a</b>(<b>r</b>)
+              </span>
+              <span className="m-eq__rhs">
+                = −<var>μ</var> <b>r</b> / |<b>r</b>|<sup>3</sup>
+              </span>
+              <span className="m-eq__n">(3)</span>
+            </div>
             <ul>
               <li>Angular momentum is conserved exactly, up to rounding.</li>
               <li>
@@ -208,7 +282,11 @@ export function Methodology() {
                   <td>
                     <i>exact</i>
                   </td>
-                  <td>The closed-form two-body solution for the configured starting state</td>
+                  <td>
+                    The closed-form two-body solution for the configured starting state. Never
+                    integrated, so it is unaffected by the step size; it is what the run is compared
+                    with.
+                  </td>
                 </tr>
                 <tr>
                   <td>Measured result</td>
@@ -232,12 +310,21 @@ export function Methodology() {
               exact elements of the configured orbit, tagged <i>exact</i>. What the run itself
               measured, such as its first period, appears under Advanced, tagged <i>run</i>.
             </p>
+            <h3>The exact solution is a reference, not a second simulation</h3>
+            <p>
+              With <i>Exact solution</i> on, the cyan dotted path and the ghost marker come from
+              Kepler&apos;s equation solved in closed form for the same starting state (ADR-0005
+              R8). Nothing in them is stepped or integrated, and the integrator never reads them.
+              Where the orange marker runs ahead of or behind the ghost, that gap is the run&apos;s
+              own position error at that moment.
+            </p>
             <h3>Drift is self-consistency, not accuracy</h3>
             <p>
               The drift plots show how far the run&apos;s energy and radius move from their starting
-              values. A run can agree with itself and still be far from the exact orbit, so drift
-              never raises an evidence tier. Accuracy is what the registered cases measure against
-              an exact solution.
+              values: a line for the largest drift so far (the number shown) and a band for the
+              drift at each sample. A run can agree with itself and still be far from the exact
+              orbit, so drift never raises an evidence tier. Accuracy is what the registered cases
+              measure against an exact solution.
             </p>
           </Section>
 
@@ -390,7 +477,9 @@ export function Methodology() {
               </li>
               <li>Runs are limited to one million steps.</li>
               <li>
-                Firefox 3D rendering and performance on reference devices are not yet verified.
+                3D rendering is verified on a GPU in Chromium, Firefox and WebKit on macOS (WA-6).
+                Performance is measured on one class A machine only; the other reference devices
+                (classes B–D) are not yet measured.
               </li>
             </ul>
           </Section>
@@ -412,7 +501,7 @@ export function Methodology() {
                       'Computed; smoothed between samples for display only',
                     ],
                     ['Velocity arrow direction', 'Computed at the current sample'],
-                    ['Exact path and exact-position ghost', 'Closed form'],
+                    ['Exact path and exact-position ghost', 'Closed form, never integrated'],
                     [
                       'Numerical impact cross / analytical crossing diamond',
                       'Computed / closed form',
@@ -433,8 +522,11 @@ export function Methodology() {
 
           <Section id="credits">
             <p>
-              Earth imagery: NASA Earth Observatory, Blue Marble. Constants: WGS 84 (NGA.STND.0036).
-              Typeface: IBM Plex.
+              Earth imagery: NASA Earth Observatory, <i>Blue Marble: Next Generation</i> with
+              topography and bathymetry, December 2004 (Reto Stöckli, NASA Goddard Space Flight
+              Center), downloaded from NASA and reduced to 2K, 4K and 8K textures without colour
+              changes. Its orientation is arbitrary: no date or longitude is implied. Constants: WGS
+              84 (NGA.STND.0036). Typeface: IBM Plex.
             </p>
           </Section>
         </div>

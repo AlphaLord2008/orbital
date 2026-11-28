@@ -111,13 +111,16 @@ test('J4: V0 is Tier 1, P2 is Tier 2 with its measured errors, and drift grows w
     ((await plot.locator('polygon').getAttribute('points')) ?? '').split(' ').length;
   await track.press('Home');
   await track.press('PageUp');
-  const v1 = num(await plot.locator('.orb-plot__value').textContent()) || 0;
+  // The headline is a decimal or d.dd × 10ⁿ; never blank, NaN or negative.
+  const SCI = /^(0|\d+(\.\d+)?( × 10⁻?[⁰¹²³⁴⁵⁶⁷⁸⁹]+)?)$/;
+  const v1 = (await plot.locator('.orb-plot__num').textContent()) ?? '';
+  expect(v1).toMatch(SCI);
   const n1 = await points();
   await track.press('End');
   const n2 = await points();
   expect(n2).toBeGreaterThan(n1);
   await expect(plot).toContainText('played to');
-  expect(v1).toBeGreaterThanOrEqual(0);
+  expect((await plot.locator('.orb-plot__num').textContent()) ?? '').toMatch(SCI);
 });
 
 test('J5: a copied link reopens the identical run, tier and mode; presentation mode', async ({
@@ -176,6 +179,18 @@ test('J6: invalid input never crashes or shows NaN; the error is announced and t
   await alt.press('Escape');
   await expect(page.locator('main')).not.toHaveClass(/app--invalid/);
   expect(errors).toEqual([]);
+});
+
+test('a link whose inputs cannot run together says why and opens V0 (WA-E6)', async ({ page }) => {
+  // k = 1.6 escapes, so a duration in orbits has no meaning; each field alone is in range.
+  await ready(page, '/?v=1&h=400000&k=1.6&dt=0.1&d=10o&m=a');
+  await expect(page.getByRole('alert')).toContainText('This link could not be opened.');
+  await expect(page.getByRole('alert')).toContainText('not bound');
+  // As for every rejected link, V0 opens in the default mode (Explore).
+  await expect(page.locator('.hud-readouts .orb-tier').first()).toHaveAttribute('data-tier', '1');
+  // Over the step budget: 10⁷ steps.
+  await ready(page, '/?v=1&h=400000&k=1&dt=0.1&d=1000000s&m=a');
+  await expect(page.getByRole('alert')).toContainText('exceed the 1,000,000-step budget');
 });
 
 test('WA-F18: switching mode keeps the run, the playback time and the camera', async ({ page }) => {
@@ -257,4 +272,40 @@ test('no automatically detectable accessibility violations in Analyze, its dialo
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Diagnostics' }).click();
   await scan();
+});
+
+test('CSV export holds every sample at full precision, from the exact initial state (WA-F15)', async ({
+  page,
+}) => {
+  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=a');
+  await page.getByRole('button', { name: 'Data view' }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download CSV/ }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe('orbital-h400000-k1-dt1.csv');
+  const path = await file.path();
+  const { readFileSync } = await import('node:fs');
+  const lines = readFileSync(path, 'utf8').trimEnd().split('\n');
+  expect(lines[0]).toBe('t_s,x_m,y_m,vx_m_per_s,vy_m_per_s');
+  expect(lines.length - 1).toBe(55_537); // every computed sample, as in the scene label
+  // r₀ = (R_E + h, 0), v₀ = (0, √(μ/r₀)) exactly (WA-F2), written as round-trip decimals.
+  const first = (lines[1] ?? '').split(',').map(Number);
+  expect(first.slice(0, 4)).toEqual([0, 6_378_137 + 400_000, 0, 0]);
+  expect(first[4]).toBe(Math.sqrt(3.986004418e14 / (6_378_137 + 400_000)));
+  for (const line of [lines[2], lines.at(-1)])
+    expect((line ?? '').split(',').every((v) => Number.isFinite(Number(v)))).toBe(true);
+});
+
+test('reduced motion: playback is paused on load and nothing animates by itself (WA-A7)', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await ready(page, '/');
+  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+  const track = page.getByRole('slider', { name: 'Playback time' });
+  const t0 = await track.getAttribute('aria-valuenow');
+  await page.waitForTimeout(1500);
+  expect(await track.getAttribute('aria-valuenow')).toBe(t0);
+  await ctx.close();
 });

@@ -42,29 +42,35 @@ body {
 }
 .m-hero h1 {
   margin: 0;
-  font: 600 36px/44px var(--font-sans);
+  font: 600 44px/52px var(--font-sans);
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 .m-lede {
   margin: 0;
-  max-width: 720px;
-  font-size: 17px;
-  line-height: 28px;
+  max-width: 68ch;
+  font-size: 18px;
+  line-height: 30px;
   color: var(--text-secondary);
+  text-wrap: pretty;
 }
+/* Key results: an editorial ruled row, not four boxed cards. */
 .m-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin: 16px 0 0;
+  margin: 24px 0 0;
+  border-top: 1px solid var(--line-control);
+  border-bottom: 1px solid var(--line-hairline);
 }
 .m-stat {
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 8px;
-  padding: 16px;
-  border: 1px solid var(--line-hairline);
-  border-radius: 8px;
-  background: var(--bg-panel);
+  padding: 20px 20px 20px 0;
+}
+.m-stat + .m-stat {
+  padding-left: 20px;
+  border-left: 1px solid var(--line-hairline);
 }
 .m-stat dt {
   order: 2;
@@ -77,7 +83,10 @@ body {
 }
 .m-stat dd:first-of-type {
   order: 1;
-  font: 500 24px/30px var(--font-mono);
+  /* Sans, not mono: Plex Mono spaces superscript exponents a full cell apart (10⁻ ⁶). */
+  font: 500 30px/36px var(--font-sans);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 .m-stat dd:last-of-type {
   order: 3;
@@ -103,9 +112,22 @@ body {
   text-decoration: none;
   font-size: 14px;
 }
+.m-toc a {
+  margin-left: -13px;
+  padding-left: 12px;
+  border-left: 1px solid transparent;
+}
 .m-toc a:hover,
 .m-toc a:focus-visible {
   color: var(--text-primary);
+}
+.m-toc a[aria-current] {
+  color: var(--text-primary);
+  border-left-color: var(--accent-spacecraft);
+}
+.m-toc ol {
+  border-left: 1px solid var(--line-hairline);
+  padding-left: 12px;
 }
 .m-toc__n {
   font: 400 12px/20px var(--font-mono);
@@ -127,7 +149,19 @@ body {
 }
 .m-section h2 {
   margin: 0;
-  font: 600 22px/30px var(--font-sans);
+  font: 600 26px/34px var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.m-section {
+  padding-top: 8px;
+  border-top: 1px solid var(--line-hairline);
+}
+.m-section > p,
+.m-section > ul {
+  max-width: 68ch;
+  font-size: 16px;
+  line-height: 27px;
+  text-wrap: pretty;
 }
 .m-section h3 {
   margin: 12px 0 0;
@@ -153,14 +187,58 @@ body {
 .m-table td:last-child {
   padding-right: 0;
 }
+/* Display equations: serif-free but typeset — italic scalars, bold vectors, numbered. */
 .m-eq {
-  margin: 0;
-  padding: 16px;
-  border: 1px solid var(--line-hairline);
-  border-radius: 8px;
-  background: var(--bg-panel);
-  font: 400 14px/24px var(--font-mono);
-  white-space: pre-wrap;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 10px 12px;
+  margin: 4px 0;
+  padding: 20px 24px;
+  border-left: 2px solid var(--line-control);
+  background: var(--bg-inset);
+  font: 400 19px/28px var(--font-sans);
+  color: var(--text-primary);
+}
+.m-eq var {
+  font-style: italic;
+}
+.m-eq b {
+  font-weight: 600;
+}
+.m-eq sub,
+.m-eq sup {
+  font-size: 0.68em;
+  line-height: 0;
+}
+.m-eq__lhs {
+  text-align: right;
+}
+.m-eq__n {
+  font: 400 13px/28px var(--font-mono);
+  color: var(--text-tertiary);
+}
+/* Tables: small-caps headers, tabular numbers, hairline rows. */
+.m-table {
+  font-size: 14px;
+  line-height: 21px;
+}
+.m-table th {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line-control);
+}
+.m-table td {
+  padding: 8px 16px 8px 0;
+}
+.m-table td.num {
+  font-variant-numeric: tabular-nums;
+}
+.m-case h3 {
+  font: 600 15px/22px var(--font-sans);
 }
 .m-kv dt {
   color: var(--text-primary);
@@ -189,8 +267,23 @@ code {
   .m-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .m-stat:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .m-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--line-hairline);
+  }
+  .m-eq {
+    padding: 16px;
+    font-size: 16px;
+  }
   .m-hero h1 {
-    font-size: 28px;
-    line-height: 36px;
+    font-size: 30px;
+    line-height: 38px;
+  }
+  .m-table {
+    display: block;
+    overflow-x: auto;
   }
 }
