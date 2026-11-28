@@ -23,5 +23,10 @@ export default defineConfig({
     assetsInlineLimit: 0,
     sourcemap: true,
     target: 'es2023',
+    rolldownOptions: {
+      // WA-F13: the methodology page is a second entry; it shares the design system, not the app.
+      // The entry keeps the name "index": the deploy check finds /assets/index-*.js.
+      input: { index: 'index.html', methodology: 'methodology.html' },
+    },
   },
 });

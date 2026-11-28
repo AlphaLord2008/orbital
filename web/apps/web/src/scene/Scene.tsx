@@ -6,7 +6,7 @@
  */
 import { analytic } from '@orbital/engine';
 import { useEffect, useRef, useState } from 'react';
-import { PerspectiveCamera, Scene as ThreeScene, Vector3, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Spherical, Scene as ThreeScene, Vector3, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { hermite, sampleIndex } from '../sim/display';
 import type { RunResult } from '../sim/protocol';
@@ -186,6 +186,28 @@ function createView(host: HTMLElement): View {
   };
   renderer.domElement.addEventListener('webglcontextlost', onLost);
 
+  // WA-A5: the focused view turns with the arrow keys and zooms with + and −.
+  const onKey = (e: KeyboardEvent) => {
+    const sph = new Spherical().setFromVector3(cam.position.clone().sub(controls.target));
+    const step = (5 * Math.PI) / 180;
+    const keys: Record<string, () => void> = {
+      ArrowLeft: () => (sph.theta -= step),
+      ArrowRight: () => (sph.theta += step),
+      ArrowUp: () => (sph.phi = Math.max(0.05, sph.phi - step)),
+      ArrowDown: () => (sph.phi = Math.min(Math.PI - 0.05, sph.phi + step)),
+      '+': () => (sph.radius = Math.max(MIN_DISTANCE_KM, sph.radius / 1.2)),
+      '=': () => (sph.radius = Math.max(MIN_DISTANCE_KM, sph.radius / 1.2)),
+      '-': () => (sph.radius = Math.min(MAX_DISTANCE_KM, sph.radius * 1.2)),
+    };
+    const fn = keys[e.key];
+    if (!fn || e.metaKey || e.ctrlKey || e.altKey) return;
+    e.preventDefault();
+    fn();
+    flight.current = null;
+    cam.position.copy(new Vector3().setFromSpherical(sph).add(controls.target));
+  };
+  host.addEventListener('keydown', onKey);
+
   const frame = (delta: number) => {
     const st = useStore.getState();
     st.tick(delta);
@@ -292,6 +314,12 @@ function createView(host: HTMLElement): View {
       } else lines.futureJoin.visible = false;
     }
     lines.exact.visible = st.showExact;
+    // WA-F17: presentation mode draws the run in higher-contrast strokes.
+    const hc = st.presentation;
+    lines.past.material.linewidth = lines.pastJoin.material.linewidth = hc ? 3 : 2;
+    lines.future.material.linewidth = lines.futureJoin.material.linewidth = hc ? 2.25 : 1.5;
+    lines.future.material.opacity = lines.futureJoin.material.opacity = hc ? 0.85 : 0.55;
+    lines.exact.material.linewidth = hc ? 2 : 1;
     lines.axisX.visible = true;
     lines.axisY.visible = true;
 
@@ -425,6 +453,7 @@ function createView(host: HTMLElement): View {
       unsubscribe();
       ro.disconnect();
       controls.dispose();
+      host.removeEventListener('keydown', onKey);
       renderer.domElement.removeEventListener('webglcontextlost', onLost);
       Object.values(lines).forEach((l) => {
         l.geometry.dispose();
@@ -476,5 +505,15 @@ export function Scene() {
         result.status === 'impact' ? 'ends in impact' : 'completed'
       }, ${result.x.length.toLocaleString('en-US')} computed samples.`
     : 'Orbit view: computing.';
-  return <div ref={host} className="scene" role="img" aria-label={label} />;
+  return (
+    <div
+      ref={host}
+      id="scene"
+      className="scene"
+      role="application"
+      aria-roledescription="3D orbit view"
+      aria-label={`${label} Arrow keys turn the view; plus and minus zoom.`}
+      tabIndex={0}
+    />
+  );
 }

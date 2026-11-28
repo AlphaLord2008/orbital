@@ -11,6 +11,7 @@ import {
   RuntimeError,
   ValueError,
 } from '@orbital/engine';
+import { runDiagnostics } from './diagnostics';
 import { decimate, revolutionStarts } from './display';
 import { exactPath } from './exact';
 import type {
@@ -90,6 +91,7 @@ async function run(req: RunRequest): Promise<void> {
   const t1 = performance.now();
 
   const revStarts = revolutionStarts(traj.x, traj.y);
+  const diag = runDiagnostics(traj);
   const exact = exactSummary(spec.r0, spec.v0);
   const last = traj.x.length - 1;
   const bound = exact.classification === 'bound' && traj.status === 'completed';
@@ -138,6 +140,7 @@ async function run(req: RunRequest): Promise<void> {
     segments,
     exact: exactFinal,
     exactPath: path,
+    diag,
     timing: { propagateMs: t1 - t0, displayMs: performance.now() - t1 },
   };
   post({ type: 'result', result }, [
@@ -148,6 +151,15 @@ async function run(req: RunRequest): Promise<void> {
     traj.vy.buffer,
     path.buffer,
     ...segments.map((s) => s.indices.buffer),
+    ...[
+      diag.eMaxSoFar,
+      diag.hMaxSoFar,
+      diag.rMaxSoFar,
+      diag.eMin,
+      diag.eMax,
+      diag.rMin,
+      diag.rMax,
+    ].map((a) => a.buffer),
   ]);
 }
 

@@ -3,13 +3,13 @@ import { type KeyboardEvent, type PointerEvent, useRef } from 'react';
 import { sampleIndex } from '../sim/display';
 import { RATES, type Rate, revolutionOf } from '../state/clock';
 import { useStore } from '../state/store';
-import { clock } from './format';
+import { clock, group } from './format';
 import * as I from './icons';
 
 const EXPLORE_RATES: readonly Rate[] = [1, 60, 600];
 const rateLabel = (r: Rate) => (r === 'fit' ? 'Fit' : `${r.toLocaleString('en-US')}×`);
 
-export function Transport() {
+export function Transport({ phone = false }: { phone?: boolean }) {
   const result = useStore((s) => s.result);
   const t = useStore((s) => s.t);
   const playing = useStore((s) => s.playing);
@@ -54,14 +54,18 @@ export function Transport() {
   const ticks = bound ? [...starts].map((s) => (s * dt) / tEnd) : [];
   if (bound && tEnd > 0) ticks.push(1);
   const rates: readonly Rate[] =
-    mode === 'analyze'
+    mode === 'analyze' && !phone
       ? [...RATES, 'fit']
       : EXPLORE_RATES.includes(rate)
         ? EXPLORE_RATES
         : [...EXPLORE_RATES, rate];
 
   return (
-    <div className="orb-transport hud-transport" role="group" aria-label="Playback">
+    <div
+      className={`orb-transport hud-transport${phone ? ' orb-transport--phone' : ''}`}
+      role="group"
+      aria-label="Playback"
+    >
       <button
         className="orb-iconbtn orb-iconbtn--play"
         aria-label={playing ? 'Pause' : 'Play'}
@@ -72,7 +76,7 @@ export function Transport() {
       >
         {playing ? <I.Pause /> : <I.Play />}
       </button>
-      {mode === 'analyze' ? (
+      {mode === 'analyze' && !phone ? (
         <div className="hud-steps">
           <button
             className="orb-iconbtn"
@@ -117,11 +121,13 @@ export function Transport() {
       <div className="orb-transport__time">
         <span className="orb-transport__t">{clock(Math.min(t, tEnd))}</span>
         <span className="orb-transport__sub">
-          {bound
-            ? `rev ${String(rev + 1)} of ${String(starts.length)}`
-            : result?.status === 'impact'
-              ? 'until impact'
-              : `of ${clock(tEnd)}`}
+          {mode === 'analyze' && !phone
+            ? `sample ${group(k)} / ${group(n - 1)}`
+            : bound
+              ? `rev ${String(rev + 1)} of ${String(starts.length)}`
+              : result?.status === 'impact'
+                ? 'until impact'
+                : `of ${clock(tEnd)}`}
         </span>
       </div>
       <div
@@ -148,7 +154,7 @@ export function Transport() {
         {ticks.map((u, i) => (
           <span key={i} className="orb-track__tick" style={{ left: `${(u * 100).toFixed(3)}%` }} />
         ))}
-        {ticks.length <= 12
+        {ticks.length <= (phone ? 6 : 12)
           ? ticks.map((u, i) => (
               <span
                 key={`l${String(i)}`}

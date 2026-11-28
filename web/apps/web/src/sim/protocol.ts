@@ -1,4 +1,5 @@
 /** Messages between the UI and the simulation worker (WA-F3). */
+import type { RunDiagnostics } from './diagnostics';
 import type { RunSpec } from './scenario';
 
 export interface RunRequest {
@@ -56,6 +57,7 @@ export interface RunResult {
   readonly exact: ExactSummary;
   /** Exact two-body path as packed [x, y] metres, adaptively sampled (sagitta ≤ 10 m). */
   readonly exactPath: Float64Array;
+  readonly diag: RunDiagnostics;
   readonly timing: { readonly propagateMs: number; readonly displayMs: number };
 }
 

@@ -21,6 +21,7 @@ function resultBytes(r: RunResult): number {
   return (
     5 * r.x.byteLength +
     r.exactPath.byteLength +
+    3 * r.diag.eMaxSoFar.byteLength +
     r.segments.reduce((n, s) => n + s.indices.byteLength, 0)
   );
 }
