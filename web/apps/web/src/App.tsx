@@ -205,6 +205,12 @@ function ViewInspection({ touch }: { touch?: boolean | undefined }) {
   );
 }
 
+/*
+ * App regions, dialogs and the phone tab panel are named with aria-label holding the visible
+ * heading's exact text, not aria-labelledby: in CI, Playwright's Firefox content process segfaults
+ * when axe computes the app's region name through aria-labelledby
+ * (docs/validation/wa5-firefox-axe-crash.md). The accessible names are unchanged.
+ */
 function Panel(p: {
   id: string;
   title: string;
@@ -216,7 +222,7 @@ function Panel(p: {
     <section
       id={p.id}
       className={`orb-panel hud-panel hud-panel--${p.side}${collapsed ? ' orb-panel--collapsed' : ''}`}
-      aria-labelledby={`${p.id}-t`}
+      aria-label={p.title}
     >
       <header className="orb-panel__header">
         <h2 className="orb-panel__title" id={`${p.id}-t`}>
@@ -255,7 +261,7 @@ function SetupPanel() {
 /** Explore: the essentials only, so the orbit stays the subject. */
 function ExploreCard() {
   return (
-    <section id="controls" className="orb-card hud-scenario" aria-labelledby="sc-t">
+    <section id="controls" className="orb-card hud-scenario" aria-label="Scenario">
       <h2 className="orb-card__title" id="sc-t">
         Scenario
       </h2>
@@ -278,7 +284,7 @@ function ExploreReadouts() {
       </section>
     );
   return (
-    <section className={`orb-card hud-readouts`} aria-labelledby="ro-t">
+    <section className={`orb-card hud-readouts`} aria-label="Readouts">
       <h2 className="visually-hidden" id="ro-t">
         Readouts
       </h2>
@@ -448,7 +454,7 @@ function PhoneSheet() {
     return (
       <section
         className="orb-sheet phone-sheet phone-sheet--tall"
-        aria-labelledby="ps-t"
+        aria-label="Scenario"
         id="controls"
         ref={sheetRef}
       >
@@ -527,7 +533,7 @@ function PhoneSheet() {
           className="phone-sheet__body"
           role="tabpanel"
           id="phone-tabpanel"
-          aria-labelledby={`tab-${tab}`}
+          aria-label={tabs.find(([id]) => id === tab)?.[1]}
         >
           {tab === 'controls' ? (
             <>

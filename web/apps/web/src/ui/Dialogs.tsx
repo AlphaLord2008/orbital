@@ -18,7 +18,7 @@ function Modal(p: { id: string; title: string; children: React.ReactNode; wide?:
     <dialog
       ref={ref}
       className={`orb-panel app-dialog${p.wide ? ' app-dialog--wide' : ''}`}
-      aria-labelledby={`${p.id}-t`}
+      aria-label={p.title} // not aria-labelledby: see the note above Panel in App.tsx
       onClose={() => {
         setDialog('none');
       }}
