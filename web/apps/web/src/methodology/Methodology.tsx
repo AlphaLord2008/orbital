@@ -477,7 +477,9 @@ export function Methodology() {
               </li>
               <li>Runs are limited to one million steps.</li>
               <li>
-                Firefox 3D rendering and performance on reference devices are not yet verified.
+                3D rendering is verified on a GPU in Chromium, Firefox and WebKit on macOS (WA-6).
+                Performance is measured on one class A machine only; the other reference devices
+                (classes B–D) are not yet measured.
               </li>
             </ul>
           </Section>

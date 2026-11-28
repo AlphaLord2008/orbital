@@ -22,6 +22,7 @@ import { group } from '../ui/format';
 import {
   FAR_KM,
   fitDistance,
+  fitDistanceForPoints,
   FOV_DEG,
   kmPerPixel,
   MAX_DISTANCE_KM,
@@ -49,6 +50,8 @@ interface Prepared {
   orbit: analytic.KeplerOrbit | null;
   crossing: [number, number] | null;
   extentKm: number;
+  /** About 1,000 computed points plus the Earth's extremes, for the camera fit. */
+  fitPoints: Float32Array;
 }
 
 function prepare(result: RunResult): Prepared {
@@ -77,6 +80,16 @@ function prepare(result: RunResult): Prepared {
     orbit.stateAt(result.exact.timeToSurface, s);
     crossing = [s[0] as number, s[1] as number];
   }
+  const n = result.x.length;
+  const stride = Math.max(1, Math.floor(n / 1000));
+  const idx: number[] = [];
+  for (let k = 0; k < n; k += stride) idx.push(k);
+  idx.push(n - 1);
+  const pathPts = packScenePositions(result.x, result.y, idx);
+  const R = EARTH_RADIUS_KM;
+  const fitPoints = new Float32Array(pathPts.length + 18);
+  fitPoints.set(pathPts);
+  fitPoints.set([R, 0, 0, -R, 0, 0, 0, R, 0, 0, -R, 0, 0, 0, R, 0, 0, -R], pathPts.length);
   return {
     result,
     forward,
@@ -85,6 +98,7 @@ function prepare(result: RunResult): Prepared {
     orbit,
     crossing,
     extentKm: Math.max(extent, EARTH_RADIUS_KM),
+    fitPoints,
   };
 }
 
@@ -253,7 +267,9 @@ function createView(host: HTMLElement, onContext: (lost: boolean) => void): View
         : undefined;
     measureFree();
     const dir = presetDirection(s.cameraRequest.preset, cam.position, focus);
-    const r1 = fitDistance(cam, extent, free);
+    const r1 = prepared.current
+      ? fitDistanceForPoints(cam, dir, prepared.current.fitPoints, free)
+      : fitDistance(cam, extent, free);
     if (reducedMotion) {
       cam.position.copy(dir).multiplyScalar(r1);
       return;

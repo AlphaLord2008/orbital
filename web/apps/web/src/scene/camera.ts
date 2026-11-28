@@ -4,10 +4,11 @@ import { EARTH_RADIUS_KM } from './frame';
 
 export const FOV_DEG = 30;
 export const NEAR_KM = 10;
-export const FAR_KM = 1e6;
+export const FAR_KM = 1e7;
 /** Closest approach: 1,000 km above the surface. */
 export const MIN_DISTANCE_KM = EARTH_RADIUS_KM + 1000;
-export const MAX_DISTANCE_KM = 9e5;
+// Far enough to frame a one-day escape (X1) on a narrow portrait phone; the log depth buffer keeps precision.
+export const MAX_DISTANCE_KM = 4e6;
 
 /**
  * Distance at which a sphere of radius `extentKm` around the target fills the view with a margin.
@@ -26,6 +27,40 @@ export function fitDistance(
   const half = Math.min(vHalf, hHalf);
   const d = (extentKm * 1.4) / Math.sin(half); // margin matches the approved D1 framing
   return Math.min(Math.max(d, MIN_DISTANCE_KM), MAX_DISTANCE_KM);
+}
+
+/**
+ * Exact perspective fit: the smallest camera distance along `dir` (unit, target → camera; the
+ * target is the origin) at which every point projects inside the free part of the view with
+ * `margin` (≥ 1; 1.35 matches the approved D1 framing of a LEO circle). A point nearer the camera
+ * than the target projects larger than a bounding sphere suggests, which is why a sphere fit
+ * let long escape paths leave narrow screens. Points are flat [x, y, z, …] in scene km.
+ */
+export function fitDistanceForPoints(
+  camera: PerspectiveCamera,
+  dir: Vector3,
+  points: ArrayLike<number>,
+  frame: { w: number; h: number } = { w: 1, h: 1 },
+  margin = 1.35,
+): number {
+  const tanV = Math.tan((camera.fov * Math.PI) / 360) * frame.h;
+  const tanH = Math.tan((camera.fov * Math.PI) / 360) * camera.aspect * frame.w;
+  // Camera basis: right ⟂ world up and dir; up completes it (top-down falls back to +x right).
+  const right = new Vector3(0, 1, 0).cross(dir);
+  if (right.lengthSq() < 1e-12) right.set(1, 0, 0);
+  right.normalize();
+  const up = dir.clone().cross(right).normalize();
+  let d = MIN_DISTANCE_KM;
+  for (let i = 0; i + 2 < points.length; i += 3) {
+    const x = points[i] as number;
+    const y = points[i + 1] as number;
+    const z = points[i + 2] as number;
+    const along = x * dir.x + y * dir.y + z * dir.z; // toward the camera
+    const lx = Math.abs(x * right.x + y * right.y + z * right.z);
+    const ly = Math.abs(x * up.x + y * up.y + z * up.z);
+    d = Math.max(d, along + (margin * lx) / tanH, along + (margin * ly) / tanV);
+  }
+  return Math.min(d, MAX_DISTANCE_KM);
 }
 
 /** Unit direction from the target to the camera for each preset. */
