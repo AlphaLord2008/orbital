@@ -1,5 +1,5 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 4 (timing window). Round 2: the content process
+ * TEMPORARY diagnostic (diag branch only, never merged), round 5 (tracing). Round 2: the content process
  * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
  * rates per method, interleaved so position in the run cannot explain a difference.
  */
@@ -38,46 +38,41 @@ async function plainAt(page: Page, delay: number) {
   );
 }
 
-const METHODS: Record<string, (page: Page) => Promise<unknown>> = {
-  'plain+0ms': (page) => plainAt(page, 0),
-  'plain+250ms': (page) => plainAt(page, 250),
-  'plain+500ms': (page) => plainAt(page, 500),
-  'plain+1000ms': (page) => plainAt(page, 1000),
-  'plain+3000ms': (page) => plainAt(page, 3000),
-  'plain+0ms, no replaceState': async (page) => {
-    await page.addInitScript(() => {
-      history.replaceState = () => undefined;
-    });
-    return plainAt(page, 0);
-  },
-  'plain+0ms, bare URL (no link decode)': async (page) => {
-    await page.goto('/');
-    await expect(page.locator('main')).toHaveAttribute('data-run-seq', /\d+/, { timeout: 15_000 });
-    await page.evaluate(AXE);
-    return page.evaluate(
-      async () =>
-        (
-          await (
-            window as unknown as { axe: { run: () => Promise<{ violations: unknown[] }> } }
-          ).axe.run()
-        ).violations.length,
+async function run(page: Page, name: string, fn: () => Promise<unknown>) {
+  let crashed = false;
+  page.on('crash', () => {
+    crashed = true;
+  });
+  try {
+    await fn();
+    console.log(`DIAG5 ${name} ok`);
+  } catch (e) {
+    console.log(
+      `DIAG5 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
     );
-  },
-};
+  }
+}
 
-for (let i = 1; i <= 6; i++)
-  for (const [name, fn] of Object.entries(METHODS))
-    test(`${name} #${String(i)}`, async ({ page }) => {
-      let crashed = false;
-      page.on('crash', () => {
-        crashed = true;
-      });
-      try {
-        await fn(page);
-        console.log(`DIAG4 ${name} ok`);
-      } catch (e) {
-        console.log(
-          `DIAG4 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
-        );
-      }
+for (let i = 1; i <= 8; i++) {
+  test.describe(`trace on #${String(i)}`, () => {
+    test.use({ trace: 'retain-on-failure' });
+    test('fixture page', async ({ page }) => {
+      await run(page, 'trace=retain-on-failure (config)', () => plainAt(page, 500));
     });
+  });
+  test.describe(`trace off #${String(i)}`, () => {
+    test.use({ trace: 'off' });
+    test('fixture page', async ({ page }) => {
+      await run(page, 'trace=off', () => plainAt(page, 500));
+    });
+  });
+  test.describe(`trace on, own context #${String(i)}`, () => {
+    test.use({ trace: 'retain-on-failure' });
+    test('browser.newContext', async ({ browser }) => {
+      const ctx = await browser.newContext();
+      const page = await ctx.newPage();
+      await run(page, 'trace=retain-on-failure, browser.newContext', () => plainAt(page, 500));
+      await ctx.close();
+    });
+  });
+}
