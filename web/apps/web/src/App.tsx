@@ -92,7 +92,7 @@ function Header({ phone }: { phone: boolean }) {
   const { setDialog, setPresentation } = useStore.getState();
   if (phone)
     return (
-      <header className="hud-header hud-header--phone">
+      <header className="hud-header hud-header--phone" data-occludes="top">
         <h1 className="hud-brand__name">ORBITAL</h1>
         <ModeSwitch touch />
         <a
@@ -105,7 +105,7 @@ function Header({ phone }: { phone: boolean }) {
       </header>
     );
   return (
-    <header className="hud-header">
+    <header className="hud-header" data-occludes="top">
       <div className="hud-brand">
         <h1 className="hud-brand__name">ORBITAL</h1>
         <span className="hud-brand__tag">Every orbit here is integrated, not drawn.</span>
@@ -223,6 +223,7 @@ function Panel(p: {
       id={p.id}
       className={`orb-panel hud-panel hud-panel--${p.side}${collapsed ? ' orb-panel--collapsed' : ''}`}
       aria-label={p.title}
+      data-occludes={p.side}
     >
       <header className="orb-panel__header">
         <h2 className="orb-panel__title" id={`${p.id}-t`}>
@@ -315,7 +316,7 @@ function Legend() {
   const showExact = useStore((s) => s.showExact);
   const showVelocity = useStore((s) => s.showVelocity);
   return (
-    <div className="orb-legend hud-legend" aria-hidden="true">
+    <div className="orb-legend hud-legend" aria-hidden="true" data-occludes="top">
       <span className="orb-legend__item">
         <span className="orb-legend__past" />
         Computed past
@@ -393,7 +394,7 @@ function Presentation() {
   const setPresentation = useStore.getState().setPresentation;
   return (
     <>
-      <header className="hud-header hud-header--pres">
+      <header className="hud-header hud-header--pres" data-occludes="top">
         <h1 className="hud-brand__name">ORBITAL</h1>
         <button
           className="orb-btn orb-btn--secondary"
@@ -405,7 +406,7 @@ function Presentation() {
         </button>
       </header>
       {r && ev ? (
-        <div className="orb-panel pres-readouts">
+        <div className="orb-panel pres-readouts" data-occludes="bottom">
           <div className="pres-readouts__id">
             <TierBadge ev={ev} />
             <span className="pres-readouts__name">
@@ -684,10 +685,10 @@ export function App() {
             </>
           ) : (
             <>
-              <div className="hud-left">
+              <div className="hud-left" data-occludes="left">
                 <ExploreCard />
               </div>
-              <div className="hud-right">
+              <div className="hud-right" data-occludes="right">
                 <ExploreReadouts />
               </div>
             </>
@@ -696,7 +697,7 @@ export function App() {
         </>
       )}
       {phone && !presentation ? null : (
-        <div className="hud-bottom">
+        <div className="hud-bottom" data-occludes="bottom">
           <Transport />
           {presentation ? null : (
             <p className="hud-meta">
@@ -719,7 +720,7 @@ function PhoneTier() {
   const sheet = useStore((s) => s.sheet);
   if (!ev || sheet !== 'none') return null;
   return (
-    <div className="phone-tier">
+    <div className="phone-tier" data-occludes="top">
       <TierBadge ev={ev} />
     </div>
   );

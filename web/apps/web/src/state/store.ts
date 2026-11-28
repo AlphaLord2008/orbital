@@ -123,7 +123,8 @@ export const useStore = create<State>()((set, get) => ({
             seq: (get().lastRun?.seq ?? 0) + 1,
           },
         });
-        if (fit) get().requestCamera(prev ? 'fit' : 'oblique');
+        // First run: Oblique, except an impact, which is framed on its impact point (Fit).
+        if (fit) get().requestCamera(prev || result.status === 'impact' ? 'fit' : 'oblique');
         writeUrl(s, get().mode);
       },
       onError: (_kind, message) => {

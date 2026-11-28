@@ -9,10 +9,20 @@ export const FAR_KM = 1e6;
 export const MIN_DISTANCE_KM = EARTH_RADIUS_KM + 1000;
 export const MAX_DISTANCE_KM = 9e5;
 
-/** Distance at which a sphere of radius `extentKm` around the target fills the view with a margin. */
-export function fitDistance(camera: PerspectiveCamera, extentKm: number): number {
-  const vHalf = (camera.fov * Math.PI) / 360;
-  const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
+/**
+ * Distance at which a sphere of radius `extentKm` around the target fills the view with a margin.
+ * `frame` is the part of the canvas not covered by panels, as fractions of its width and height
+ * (the projection centre is moved to that region, see `Scene.tsx`), so the orbit is framed where
+ * it can be seen rather than under a panel.
+ */
+export function fitDistance(
+  camera: PerspectiveCamera,
+  extentKm: number,
+  frame: { w: number; h: number } = { w: 1, h: 1 },
+): number {
+  const t = Math.tan((camera.fov * Math.PI) / 360);
+  const vHalf = Math.atan(t * frame.h);
+  const hHalf = Math.atan(t * camera.aspect * frame.w);
   const half = Math.min(vHalf, hHalf);
   const d = (extentKm * 1.4) / Math.sin(half); // margin matches the approved D1 framing
   return Math.min(Math.max(d, MIN_DISTANCE_KM), MAX_DISTANCE_KM);
@@ -32,9 +42,11 @@ export function presetDirection(
   }
   if (preset === 'top') return new Vector3(0, 1, 1e-6).normalize(); // engine +x right, +y up
   if (preset === 'oblique') {
+    // 30° above the orbit plane, looking from the side the spacecraft flies toward first
+    // (engine +y, scene −Z), so a new run starts in front of the Earth (approved D1 framing).
     const el = (30 * Math.PI) / 180;
     const az = (20 * Math.PI) / 180;
-    return new Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    return new Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
   }
   return current.clone().normalize();
 }

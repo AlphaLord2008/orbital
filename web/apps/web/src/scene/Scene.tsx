@@ -6,7 +6,14 @@
  */
 import { analytic } from '@orbital/engine';
 import { useEffect, useRef, useState } from 'react';
-import { PerspectiveCamera, Spherical, Scene as ThreeScene, Vector3, WebGLRenderer } from 'three';
+import {
+  PerspectiveCamera,
+  Quaternion,
+  Spherical,
+  Scene as ThreeScene,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { hermite, sampleIndex } from '../sim/display';
 import type { RunResult } from '../sim/protocol';
@@ -110,17 +117,62 @@ function createView(host: HTMLElement): View {
   const cam = new PerspectiveCamera(FOV_DEG, 1, NEAR_KM, FAR_KM);
   const insetCam = new PerspectiveCamera(FOV_DEG, 480 / 300, 1, FAR_KM);
   let insetKmPx = 0;
-  cam.position.set(9000, 7000, 22000);
+  cam.position.set(9000, 7000, -22000);
   const size = { width: 1, height: 1 };
+  /**
+   * The part of the canvas no panel covers (elements marked `data-occludes`), as a projection
+   * offset (px) and fractions of the canvas. The orbit is framed there, not under a panel.
+   * `x`/`y` ease toward the target so a mode switch or a collapsed panel glides, not jumps.
+   */
+  const free = { x: 0, y: 0, tx: 0, ty: 0, w: 1, h: 1, checked: 0 };
+  const measureFree = () => {
+    const H = host.getBoundingClientRect();
+    if (H.width < 1 || H.height < 1) return;
+    let left = H.left;
+    let right = H.right;
+    let top = H.top;
+    let bottom = H.bottom;
+    for (const el of document.querySelectorAll<HTMLElement>('[data-occludes]')) {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) continue;
+      const side = el.dataset['occludes'];
+      if (side === 'left') left = Math.max(left, r.right);
+      else if (side === 'right') right = Math.min(right, r.left);
+      else if (side === 'top') top = Math.max(top, r.bottom);
+      else if (side === 'bottom') bottom = Math.min(bottom, r.top);
+    }
+    // Panels that leave too little room (narrow tablets) do not reframe the view.
+    if (right - left < H.width * 0.4) {
+      left = H.left;
+      right = H.right;
+    }
+    if (bottom - top < H.height * 0.4) {
+      top = H.top;
+      bottom = H.bottom;
+    }
+    free.tx = (left + right) / 2 - (H.left + H.width / 2);
+    free.ty = (top + bottom) / 2 - (H.top + H.height / 2);
+    free.w = (right - left) / H.width;
+    free.h = (bottom - top) / H.height;
+  };
+  const applyOffset = () => {
+    cam.setViewOffset(size.width, size.height, -free.x, -free.y, size.width, size.height);
+  };
   const resize = () => {
     size.width = host.clientWidth || 1;
     size.height = host.clientHeight || 1;
     renderer.setSize(size.width, size.height, false);
     cam.aspect = size.width / size.height;
-    cam.updateProjectionMatrix();
+    measureFree();
+    free.x = free.tx; // a resize reframes at once
+    free.y = free.ty;
+    applyOffset();
     for (const l of Object.values(lines)) l.material.resolution.set(size.width, size.height);
   };
-  const earth = createEarth(renderer, () => undefined);
+  const earth = createEarth(renderer, (tier, bytes) => {
+    host.dataset['earthTexture'] = tier;
+    host.dataset['earthTextureBytes'] = String(bytes);
+  });
   scene.add(earth.mesh);
 
   const lines = {
@@ -145,13 +197,27 @@ function createView(host: HTMLElement): View {
   controls.maxDistance = MAX_DISTANCE_KM;
   controls.zoomSpeed = 0.8;
   controls.rotateSpeed = 0.6;
+  // Any drag, pinch or wheel takes the camera back from a preset flight at once.
+  const cancelFlight = () => {
+    flight.current = null;
+  };
+  controls.addEventListener('start', cancelFlight);
 
   const prepared: { current: Prepared | null } = { current: null };
   const segIdx = { current: -1 };
-  const flight: { current: { from: Vector3; to: Vector3; start: number } | null } = {
-    current: null,
+  /** A preset flight: the view direction turns along a great circle (never through the Earth)
+   *  while the distance changes geometrically, so near and far presets feel equally quick. */
+  const flight: {
+    current: { dir: Vector3; turn: Quaternion; r0: number; r1: number; start: number } | null;
+  } = { current: null };
+  const tmp = {
+    v: new Vector3(),
+    d: new Vector3(),
+    q: new Quaternion(),
+    id: new Quaternion(),
+    h: new Float64Array(2),
+    s: new Float64Array(4),
   };
-  const tmp = { v: new Vector3(), h: new Float64Array(2), s: new Float64Array(4) };
 
   /** Build display geometry for a new result (also called before a camera fit, so it fits the new run). */
   const sync = (r: RunResult | null) => {
@@ -174,10 +240,21 @@ function createView(host: HTMLElement): View {
       r?.status === 'impact'
         ? new Vector3((r.x.at(-1) as number) / M_PER_UNIT, 0, -(r.y.at(-1) as number) / M_PER_UNIT)
         : undefined;
+    measureFree();
     const dir = presetDirection(s.cameraRequest.preset, cam.position, focus);
-    const to = dir.multiplyScalar(fitDistance(cam, extent));
-    if (reducedMotion) cam.position.copy(to);
-    else flight.current = { from: cam.position.clone(), to, start: performance.now() };
+    const r1 = fitDistance(cam, extent, free);
+    if (reducedMotion) {
+      cam.position.copy(dir).multiplyScalar(r1);
+      return;
+    }
+    const from = cam.position.clone().normalize();
+    flight.current = {
+      dir: from,
+      turn: new Quaternion().setFromUnitVectors(from, dir),
+      r0: cam.position.length(),
+      r1,
+      start: performance.now(),
+    };
   });
 
   // WA-E5: keep the page alive on context loss; three restores on webglcontextrestored.
@@ -212,15 +289,30 @@ function createView(host: HTMLElement): View {
     const st = useStore.getState();
     st.tick(delta);
 
-    // Camera flight (eased), then controls.
+    // Camera flight (eased, interruptible), then controls.
     const f = flight.current;
     if (f) {
       const u = Math.min(1, (performance.now() - f.start) / 700);
       const e = u < 0.5 ? 4 * u * u * u : 1 - (-2 * u + 2) ** 3 / 2;
-      cam.position.lerpVectors(f.from, f.to, e);
+      tmp.q.copy(tmp.id).slerp(f.turn, e);
+      tmp.d.copy(f.dir).applyQuaternion(tmp.q);
+      cam.position.copy(tmp.d).multiplyScalar(f.r0 * (f.r1 / f.r0) ** e);
       if (u >= 1) flight.current = null;
     }
     controls.update();
+
+    // Follow the panels: re-measure four times a second, ease the projection centre.
+    const now = performance.now();
+    if (now - free.checked > 250) {
+      free.checked = now;
+      measureFree();
+    }
+    if (Math.abs(free.tx - free.x) > 0.25 || Math.abs(free.ty - free.y) > 0.25) {
+      const a = reducedMotion ? 1 : 1 - Math.exp(-delta / 0.09);
+      free.x += (free.tx - free.x) * a;
+      free.y += (free.ty - free.y) * a;
+      applyOffset();
+    }
 
     sync(st.result);
     const p = prepared.current;
@@ -239,6 +331,10 @@ function createView(host: HTMLElement): View {
     };
     const dist = cam.position.length();
     const kmPx = kmPerPixel(cam, dist, size.height);
+    // Earth's drawn diameter in device pixels picks the texture resolution (earth.ts).
+    earth.setDrawnDiameter(
+      ((2 * EARTH_RADIUS_KM) / kmPx) * renderer.getPixelRatio() * (dist > EARTH_RADIUS_KM ? 1 : 0),
+    );
     for (const l of Object.values(lines)) updateDashes(l, kmPx);
     const project = (X: number, Y: number, Z: number): Pt | null => {
       tmp.v.set(X, Y, Z).project(cam);
@@ -452,6 +548,7 @@ function createView(host: HTMLElement): View {
       cancelAnimationFrame(raf);
       unsubscribe();
       ro.disconnect();
+      controls.removeEventListener('start', cancelFlight);
       controls.dispose();
       host.removeEventListener('keydown', onKey);
       renderer.domElement.removeEventListener('webglcontextlost', onLost);
