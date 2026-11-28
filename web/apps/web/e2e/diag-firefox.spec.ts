@@ -1,5 +1,5 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 6 (main vs WA-5, DOM exclusion). Round 2: the content process
+ * TEMPORARY diagnostic (diag branch only, never merged), round 7 (inside the scenario card). Round 2: the content process
  * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
  * rates per method, interleaved so position in the run cannot explain a difference.
  */
@@ -45,10 +45,10 @@ async function run(page: Page, name: string, fn: () => Promise<unknown>) {
   });
   try {
     await fn();
-    console.log(`DIAG6 ${name} ok`);
+    console.log(`DIAG7 ${name} ok`);
   } catch (e) {
     console.log(
-      `DIAG6 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
+      `DIAG7 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
     );
   }
 }
@@ -69,13 +69,14 @@ async function plainExcluding(page: Page, exclude: string | null) {
 
 const EXCLUDES = [
   null,
-  '.scene',
-  '.scene-overlay',
-  '.hud-header',
   '.hud-left',
-  '.hud-right',
-  '.hud-bottom',
-  '.hud-legend',
+  '#preset',
+  '.hud-left input[inputmode="decimal"]',
+  '.hud-left input[type="range"]',
+  '.hud-left .orb-slider',
+  '.hud-left .cam-seg',
+  '.hud-left .orb-field__msg',
+  '.hud-left .orb-card__title',
 ];
 for (let i = 1; i <= 4; i++)
   for (const ex of EXCLUDES)
