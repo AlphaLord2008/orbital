@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: [wa5, main]
+        build: [wa5]
     defaults:
       run:
         working-directory: web
