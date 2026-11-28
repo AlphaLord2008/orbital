@@ -25,7 +25,8 @@ const kv = (page: Page, label: string) =>
     .locator('.hud-panel--right dt', { hasText: label })
     .first()
     .locator('xpath=following-sibling::dd[1]');
-const num = (s: string | null) => Number((s ?? '').replace(/[\s\u202f]/g, '').replace(/[a-z]+$/, ''));
+const num = (s: string | null) =>
+  Number((s ?? '').replace(/[\s\u202f]/g, '').replace(/[a-z]+$/, ''));
 
 test('J2: GEO has a sidereal-day period, and dragging altitude changes the period monotonically', async ({
   page,
