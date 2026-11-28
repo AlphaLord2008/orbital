@@ -178,6 +178,18 @@ test('J6: invalid input never crashes or shows NaN; the error is announced and t
   expect(errors).toEqual([]);
 });
 
+test('a link whose inputs cannot run together says why and opens V0 (WA-E6)', async ({ page }) => {
+  // k = 1.6 escapes, so a duration in orbits has no meaning; each field alone is in range.
+  await ready(page, '/?v=1&h=400000&k=1.6&dt=0.1&d=10o&m=a');
+  await expect(page.getByRole('alert')).toContainText('This link could not be opened.');
+  await expect(page.getByRole('alert')).toContainText('not bound');
+  // As for every rejected link, V0 opens in the default mode (Explore).
+  await expect(page.locator('.hud-readouts .orb-tier').first()).toHaveAttribute('data-tier', '1');
+  // Over the step budget: 10⁷ steps.
+  await ready(page, '/?v=1&h=400000&k=1&dt=0.1&d=1000000s&m=a');
+  await expect(page.getByRole('alert')).toContainText('exceed the 1,000,000-step budget');
+});
+
 test('WA-F18: switching mode keeps the run, the playback time and the camera', async ({ page }) => {
   await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=e');
   const pause = page.getByRole('button', { name: 'Pause' });

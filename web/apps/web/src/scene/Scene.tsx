@@ -104,7 +104,7 @@ interface View {
   dispose(): void;
 }
 
-function createView(host: HTMLElement): View {
+function createView(host: HTMLElement, onContext: (lost: boolean) => void): View {
   const renderer = new WebGLRenderer({
     antialias: true,
     logarithmicDepthBuffer: true,
@@ -270,7 +270,8 @@ function createView(host: HTMLElement): View {
 
   // WA-E5: keep the page alive on context loss; three restores on webglcontextrestored.
   const onLost = (e: Event) => {
-    e.preventDefault();
+    e.preventDefault(); // allow the browser to restore it
+    onContext(true);
   };
   renderer.domElement.addEventListener('webglcontextlost', onLost);
 
@@ -577,7 +578,8 @@ function createView(host: HTMLElement): View {
   };
   let forceDraw = true;
   const onRestored = () => {
-    forceDraw = true;
+    forceDraw = true; // three re-uploads geometry and textures on the next draw
+    onContext(false);
   };
   renderer.domElement.addEventListener('webglcontextrestored', onRestored);
 
@@ -636,6 +638,7 @@ export function Scene() {
   const host = useRef<HTMLDivElement>(null);
   const result = useStore((s) => s.result);
   const [failed, setFailed] = useState<string | null>(null);
+  const [contextLost, setContextLost] = useState(false);
   useEffect(() => {
     if (!host.current) return;
     let view: View;
@@ -643,7 +646,7 @@ export function Scene() {
       // WA-N4: probe for WebGL 2 first, so an unsupported browser gets the fallback without a renderer error.
       if (!document.createElement('canvas').getContext('webgl2'))
         throw new Error('WebGL 2 is not available');
-      view = createView(host.current);
+      view = createView(host.current, setContextLost);
     } catch (e) {
       // WA-N4/WA-E5: no WebGL → keep every control, readout and number working; say why the view is missing.
       const message = e instanceof Error ? e.message : String(e);
@@ -672,14 +675,25 @@ export function Scene() {
       }, ${result.x.length.toLocaleString('en-US')} computed samples.`
     : 'Orbit view: computing.';
   return (
-    <div
-      ref={host}
-      id="scene"
-      className="scene"
-      role="application"
-      aria-roledescription="3D orbit view"
-      aria-label={`${label} Arrow keys turn the view; plus and minus zoom.`}
-      tabIndex={0}
-    />
+    <>
+      <div
+        ref={host}
+        id="scene"
+        className="scene"
+        role="application"
+        aria-roledescription="3D orbit view"
+        aria-label={`${label} Arrow keys turn the view; plus and minus zoom.`}
+        tabIndex={0}
+      />
+      {/* WA-E5: the GPU context was lost (driver reset, GPU switch, memory pressure). */}
+      {contextLost ? (
+        <div className="scene-lost" role="status">
+          <p className="orb-caption">
+            The 3D view lost its graphics context and is waiting for the browser to restore it.
+            Every readout and control still works from the same computed run.
+          </p>
+        </div>
+      ) : null}
+    </>
   );
 }

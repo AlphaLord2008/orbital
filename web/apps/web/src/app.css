@@ -983,3 +983,18 @@ select.orb-select {
     display: none;
   }
 }
+
+/* WA-E5: graphics context lost; centred over the view until the browser restores it. */
+.scene-lost {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  z-index: 5;
+  width: min(420px, calc(100vw - 48px));
+  transform: translate(-50%, -50%);
+  padding: 14px 16px;
+  border: 1px solid var(--line-hairline);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel);
+  text-align: center;
+}
