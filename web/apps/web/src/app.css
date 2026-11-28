@@ -479,8 +479,12 @@ select.orb-select {
   vector-effect: non-scaling-stroke;
 }
 .plot-limit__label {
-  fill: var(--text-tertiary);
-  font: 400 10px var(--font-mono);
+  position: absolute;
+  right: 4px;
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  font: 400 12px/14px var(--font-mono);
+  pointer-events: none;
 }
 .orb-plot {
   margin: 0;

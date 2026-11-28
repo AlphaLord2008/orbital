@@ -107,7 +107,9 @@ for (const dpr of [1, 2]) {
         `${browserName} here has no WebGL 2: 3D rendering is not verified in this browser`,
       );
 
-      await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+        timeout: 15_000,
+      });
       await expect(
         page.getByRole('application', {
           name: /Orbit view: bound orbit, completed, 55,537 computed samples/,
@@ -124,7 +126,9 @@ for (const dpr of [1, 2]) {
 
       await page.reload();
       await page.setViewportSize({ width: 900, height: 700 });
-      await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+      await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+        timeout: 15_000,
+      });
       await page.getByRole('button', { name: 'Top-down' }).click();
       const pause2 = page.getByRole('button', { name: 'Pause' });
       if (await pause2.isVisible()) await pause2.click();
@@ -157,9 +161,13 @@ test('without WebGL the app says so and every readout still works (WA-N4)', asyn
   await expect(
     page.getByText(/The 3D view could not start because WebGL is unavailable/),
   ).toBeVisible();
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 15_000,
+  });
   await expect(page.locator('.orb-stamp')).toHaveText(/sample \d/);
   await page.getByLabel('Preset').selectOption('I1');
-  await expect(page.getByText('Bound · reaches the surface')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText('Bound · reaches the surface')).toBeVisible({
+    timeout: 15_000,
+  });
   expect(errors).toEqual([]);
 });

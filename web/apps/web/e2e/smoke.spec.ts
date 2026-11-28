@@ -78,11 +78,15 @@ test('the worker computes the ISS preset and the readouts show sample values (J1
   await watchCsp(page);
   await page.goto('/');
   // J1: orbit visible within 3 s on class A (CI runners are slower; the budget is measured in WA-6).
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 10_000,
+  });
   // The 3D view itself is tested in render.spec.ts (it needs WebGL 2); this test needs only the worker.
   await expect(page.locator('main')).toHaveAttribute('data-run-steps', '55536');
   await page.getByLabel('Preset').selectOption('I1');
-  await expect(page.getByText('Bound · reaches the surface')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.hud-kind').getByText('Bound · reaches the surface')).toBeVisible({
+    timeout: 10_000,
+  });
   await expect(page.getByText(/until impact/)).toBeVisible();
   expect(await page.evaluate(() => window.__cspViolations)).toEqual([]);
   expect(errors).toEqual([]);
@@ -93,7 +97,9 @@ test('rapid inputs: the last input wins and every run is timed (WA-F3, WA-N2)', 
 }, info) => {
   test.setTimeout(90_000);
   await page.goto('/');
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 10_000,
+  });
   const main = page.locator('main');
   const seq = async () => Number((await main.getAttribute('data-run-seq')) ?? 0);
   const alt = page.getByLabel('Altitude', { exact: true });
@@ -142,7 +148,9 @@ test('near-escape inputs compute, and a failed input never passes the old run of
   page,
 }) => {
   await page.goto('/');
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 15_000,
+  });
   const k = page.getByLabel('Speed factor', { exact: true });
   const kind = page.locator('.hud-kind');
   await page.getByLabel('Preset').selectOption('X1'); // 1-day run, so near-escape ellipses fit the budget

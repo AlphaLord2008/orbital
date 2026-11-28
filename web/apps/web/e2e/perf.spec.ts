@@ -100,7 +100,9 @@ test('playback: frame rate, pacing, long tasks and input latency', async ({ page
     }).observe({ type: 'event', durationThreshold: 16, buffered: true } as PerformanceObserverInit);
   });
   await page.goto('/');
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 15_000,
+  });
   await page.waitForTimeout(1500); // past the camera flight and the 4K texture
 
   // Steady playback (autoplay, as shipped) for 8 s: frame intervals and long tasks.
@@ -129,7 +131,9 @@ test('playback: frame rate, pacing, long tasks and input latency', async ({ page
   for (let i = 0; i < 5; i++) await track.press('ArrowRight');
   await page.getByRole('button', { name: '600×' }).click();
   await page.getByLabel('Preset').selectOption('E1');
-  await expect(page.getByText(/Bound · ellipse/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · ellipse/)).toBeVisible({
+    timeout: 15_000,
+  });
   await page.waitForTimeout(500);
   const events = await page.evaluate(() => window.__perf.events);
 
@@ -192,7 +196,9 @@ test('playback: frame rate, pacing, long tasks and input latency', async ({ page
 
 test('liveness check: a frozen renderer fails it', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText(/Bound · circular/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.hud-kind').getByText(/Bound · circular/)).toBeVisible({
+    timeout: 15_000,
+  });
   await page.waitForTimeout(1500);
   expect(await canvasChange(page, LIVE.windowMs), 'live renderer passes').toBeGreaterThanOrEqual(
     LIVE.changedPixels,

@@ -130,8 +130,19 @@ jobs:
           ! grep -qi 'unsafe-inline' headers.txt
           grep -qi '^x-content-type-options: nosniff' headers.txt
           grep -qi '^cross-origin-opener-policy: same-origin' headers.txt
-          asset=$(curl -sSf "$URL/" | grep -Eo '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)
-          curl -sSfI "$URL$asset" | grep -qi '^cache-control: public, max-age=31536000, immutable'
+          # The entry bundle must be found and served immutable. Like the page check above, allow
+          # a just-uploaded version a few seconds to propagate; the criteria are unchanged.
+          ok=
+          for i in 1 2 3 4 5 6; do
+            asset=$(curl -sSf "$URL/" | grep -Eo '/assets/index-[A-Za-z0-9_-]+\.js' | head -1)
+            if [ -n "$asset" ] && curl -sSfI "$URL$asset" > asset-headers.txt \
+              && grep -qi '^cache-control: public, max-age=31536000, immutable' asset-headers.txt; then
+              ok=1; break
+            fi
+            sleep 5
+          done
+          echo "Entry bundle: ${asset:-<none found>}"; cat asset-headers.txt 2>/dev/null || true
+          [ -n "$ok" ] || { echo "::error::Entry bundle missing or not served immutable"; exit 1; }
           echo "Headers OK on $URL"
 
       - if: steps.creds.outputs.ok == 'true' && inputs.action != 'rollback'

@@ -66,19 +66,22 @@ export function DriftPlot(p: {
                 y1={Y(p.limit.value)}
                 y2={Y(p.limit.value)}
               />
-              <text
-                className="plot-limit__label"
-                x={W - 4}
-                y={Y(p.limit.value) + 11}
-                textAnchor="end"
-              >
-                {p.limit.label}
-              </text>
             </>
           ) : null}
           <polygon className="plot-band" points={poly} />
           <circle className="plot-dot" cx={cx} cy={cy} r="3" />
         </svg>
+        {/* HTML, not SVG text: the plot is stretched to its frame (preserveAspectRatio none),
+            which distorts glyphs, and this was the app's only SVG text when Firefox's content
+            process crashed under axe in CI. */}
+        {showLimit && p.limit ? (
+          <span
+            className="plot-limit__label"
+            style={{ top: `${((100 * Y(p.limit.value)) / H).toFixed(2)}%` }}
+          >
+            {p.limit.label}
+          </span>
+        ) : null}
       </div>
       <div className="orb-plot__axis">
         <span>0</span>
