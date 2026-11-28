@@ -1,5 +1,5 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 9 (which element). Round 2: the content process
+ * TEMPORARY diagnostic (diag branch only, never merged), round 10 (which property of the card container). Round 2: the content process
  * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
  * rates per method, interleaved so position in the run cannot explain a difference.
  */
@@ -45,10 +45,10 @@ async function run(page: Page, name: string, fn: () => Promise<unknown>) {
   });
   try {
     await fn();
-    console.log(`DIAG9 ${name} ok`);
+    console.log(`DIAG10 ${name} ok`);
   } catch (e) {
     console.log(
-      `DIAG9 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
+      `DIAG10 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
     );
   }
 }
@@ -84,6 +84,49 @@ async function ruleOn(page: Page, ctx: Ctx, rule: string) {
     { c: ctx, r: rule },
   );
 }
+
+const SECTION_ONLY: Ctx = { include: ['#controls'], exclude: ['#controls > *'] };
+const VARIANTS: Record<string, { ctx: Ctx; mutate?: string }> = {
+  'div .hud-left only': { ctx: { include: ['.hud-left'], exclude: ['.hud-left > *'] } },
+  'section only': { ctx: SECTION_ONLY },
+  'section, aria-labelledby removed': {
+    ctx: SECTION_ONLY,
+    mutate: "document.getElementById('controls').removeAttribute('aria-labelledby')",
+  },
+  'section, display:block': {
+    ctx: SECTION_ONLY,
+    mutate: "document.getElementById('controls').style.display = 'block'",
+  },
+  'section, wrapper display:block': {
+    ctx: SECTION_ONLY,
+    mutate: "document.querySelector('.hud-left').style.display = 'block'",
+  },
+  'section, h2 text moved to aria-label': {
+    ctx: SECTION_ONLY,
+    mutate:
+      "const s = document.getElementById('controls'); s.removeAttribute('aria-labelledby'); s.setAttribute('aria-label', 'Scenario')",
+  },
+};
+
+for (const [name, v] of Object.entries(VARIANTS))
+  for (let k = 1; k <= 3; k++)
+    test(`var ${name} #${String(k)}`, async ({ page }) => {
+      await run(page, name, async () => {
+        await ready(page, APP);
+        if (v.mutate) await page.evaluate(v.mutate);
+        await page.waitForTimeout(500);
+        await page.evaluate(AXE);
+        return page.evaluate(async (c) => {
+          const axe = (
+            window as unknown as {
+              axe: { run: (c: unknown, o: unknown) => Promise<{ violations: unknown[] }> };
+            }
+          ).axe;
+          return (await axe.run(c, { runOnly: { type: 'rule', values: ['nested-interactive'] } }))
+            .violations.length;
+        }, v.ctx);
+      });
+    });
 
 const TARGETS: Record<string, Ctx> = {
   'card section only (descendants excluded)': {
