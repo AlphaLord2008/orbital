@@ -27,3 +27,4 @@ jobs:
       - run: pnpm --filter @orbital/web exec playwright test --project=firefox e2e/diag-firefox.spec.ts --reporter=list --workers=1
         env:
           DEBUG: pw:browser
+          DIAG_ROUND: "3"

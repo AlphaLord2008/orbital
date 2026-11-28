@@ -1,75 +1,83 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 2. Round 1 showed plain axe.run
- * passes on every page, region and rule in Firefox, so this isolates what differs in the failing
- * test: AxeBuilder (runPartial), the fixture page, and time since load.
+ * TEMPORARY diagnostic (diag branch only, never merged), round 3. Round 2: the content process
+ * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
+ * rates per method, interleaved so position in the run cannot explain a difference.
  */
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname } from 'node:path';
 
-const E1A = '/?v=1&h=400000&k=1.1&dt=1&d=2o&m=a';
+const require = createRequire(import.meta.url);
+const AXE = readFileSync(
+  require.resolve('axe-core/axe.min.js', {
+    paths: [dirname(require.resolve('@axe-core/playwright'))],
+  }),
+  'utf8',
+);
+const APP = '/?v=1&h=400000&k=1&dt=1&d=10o&m=e';
 
 async function ready(page: Page, url: string) {
-  page.on('console', (m) => {
-    console.log(`DIAG console ${m.type()}: ${m.text().slice(0, 300)}`);
-  });
-  page.on('crash', () => {
-    console.log(`DIAG crash event at ${new Date().toISOString()}`);
-  });
   await page.goto(url);
-  await expect(page.locator('main')).toHaveAttribute('data-run-seq', /\d+/, { timeout: 15_000 });
-  console.log(`DIAG ready at ${new Date().toISOString()}`);
+  if (url.includes('methodology')) await expect(page.locator('h1')).toBeVisible();
+  else
+    await expect(page.locator('main')).toHaveAttribute('data-run-seq', /\d+/, { timeout: 15_000 });
 }
 
-async function builder(page: Page, legacy = false) {
+async function builder(page: Page, legacy: boolean) {
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   const b = new AxeBuilder({ page });
   if (legacy) b.setLegacyMode(true);
-  const r = await b.analyze();
-  return r.violations.length;
+  return (await b.analyze()).violations.length;
 }
 
-test('A: exact failing flow (AxeBuilder, Analyze E1)', async ({ page }) => {
-  await ready(page, E1A);
-  console.log(`DIAG A violations ${String(await builder(page))}`);
-});
-
-test('B: AxeBuilder legacy mode, Analyze E1', async ({ page }) => {
-  await ready(page, E1A);
-  console.log(`DIAG B violations ${String(await builder(page, true))}`);
-});
-
-test('C: no axe at all, Analyze E1 idle 8 s', async ({ page }) => {
-  await ready(page, E1A);
-  for (let i = 0; i < 16; i++) {
-    await page.waitForTimeout(500);
-    console.log(
-      `DIAG C t+${String((i + 1) * 0.5)}s alive=${String(await page.evaluate(() => 1 + 1))}`,
+const METHODS: Record<string, (page: Page) => Promise<unknown>> = {
+  'builder-app': async (page) => {
+    await ready(page, APP);
+    return builder(page, false);
+  },
+  'legacy-app': async (page) => {
+    await ready(page, APP);
+    return builder(page, true);
+  },
+  'plain-app': async (page) => {
+    await ready(page, APP);
+    await page.evaluate(AXE);
+    return page.evaluate(
+      async () =>
+        (
+          await (
+            window as unknown as { axe: { run: () => Promise<{ violations: unknown[] }> } }
+          ).axe.run()
+        ).violations.length,
     );
-  }
-});
-
-test('D: AxeBuilder on Explore V0 (control)', async ({ page }) => {
-  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=e');
-  console.log(`DIAG D violations ${String(await builder(page))}`);
-});
-
-test('E: AxeBuilder on Analyze V0', async ({ page }) => {
-  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=a');
-  console.log(`DIAG E violations ${String(await builder(page))}`);
-});
-
-test('F: Analyze E1 paused, then AxeBuilder', async ({ page }) => {
-  await ready(page, E1A);
-  const pause = page.getByRole('button', { name: 'Pause' });
-  if (await pause.isVisible()) await pause.click();
-  console.log(`DIAG F violations ${String(await builder(page))}`);
-});
-
-test('G: Explore V0 idle 8 s (control for C)', async ({ page }) => {
-  await ready(page, '/?v=1&h=400000&k=1&dt=1&d=10o&m=e');
-  for (let i = 0; i < 16; i++) {
+  },
+  'builder-static': async (page) => {
+    await ready(page, '/methodology.html');
+    return builder(page, false);
+  },
+  'newpage-app': async (page) => {
+    await ready(page, APP);
+    const p2 = await page.context().newPage();
+    await p2.close();
     await page.waitForTimeout(500);
-    console.log(
-      `DIAG G t+${String((i + 1) * 0.5)}s alive=${String(await page.evaluate(() => 1 + 1))}`,
-    );
-  }
-});
+    return page.evaluate(() => 1 + 1);
+  },
+};
+
+for (let i = 1; i <= 8; i++)
+  for (const [name, fn] of Object.entries(METHODS))
+    test(`${name} #${String(i)}`, async ({ page }) => {
+      let crashed = false;
+      page.on('crash', () => {
+        crashed = true;
+      });
+      try {
+        await fn(page);
+        console.log(`DIAG3 ${name} ok`);
+      } catch (e) {
+        console.log(
+          `DIAG3 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
+        );
+      }
+    });
