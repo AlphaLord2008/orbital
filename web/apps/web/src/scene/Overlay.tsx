@@ -88,6 +88,15 @@ function reg<K extends keyof Els>(key: K) {
   };
 }
 let lastLabel = '';
+/** The spacecraft label's box this frame: lower-priority labels (axes) yield to it. */
+let labelBox: { x0: number; y0: number; x1: number; y1: number } | null = null;
+const underLabel = (p: Pt | null, w = 14, h = 18): boolean =>
+  !!p &&
+  !!labelBox &&
+  p.x + 6 + w > labelBox.x0 &&
+  p.x + 6 < labelBox.x1 &&
+  p.y - 9 + h > labelBox.y0 &&
+  p.y - 9 < labelBox.y1;
 
 const show = (el: Element | null | undefined, on: boolean) => {
   if (el) el.toggleAttribute('hidden', !on);
@@ -105,6 +114,7 @@ const placeSvg = (el: SVGElement | null | undefined, x: number, y: number, rot =
 /** Called by the scene driver once per frame. */
 export function updateOverlay(f: OverlayFrame): void {
   const m = f.marker;
+  labelBox = null;
   show(els.marker, !!m && !m.hidden);
   show(els.behind, !!m && m.hidden);
   show(els.label, !!m);
@@ -125,7 +135,9 @@ export function updateOverlay(f: OverlayFrame): void {
       const w = els.label.offsetWidth;
       // Keep the whole label inside the view on narrow screens.
       const x = Math.min(Math.max(right ? lx : lx - w, 4), f.width - w - 4);
-      place(els.label, x, below ? ly : ly - 22);
+      const y = below ? ly : ly - 22;
+      place(els.label, x, y);
+      labelBox = { x0: x - 6, y0: y - 6, x1: x + w + 6, y1: y + els.label.offsetHeight + 6 };
     }
     const ux = (right ? 1 : -1) * Math.SQRT1_2;
     const uy = (below ? 1 : -1) * Math.SQRT1_2;
@@ -190,10 +202,12 @@ export function updateOverlay(f: OverlayFrame): void {
       els.insetLeader.setAttribute('y2', (fig.bottom - root.top).toFixed(1));
     }
   }
-  show(els.xLabel, !!f.xLabel);
-  if (f.xLabel) place(els.xLabel, f.xLabel.x + 6, f.xLabel.y - 9);
-  show(els.yLabel, !!f.yLabel);
-  if (f.yLabel) place(els.yLabel, f.yLabel.x + 6, f.yLabel.y - 9);
+  const xOk = !!f.xLabel && !underLabel(f.xLabel);
+  show(els.xLabel, xOk);
+  if (xOk && f.xLabel) place(els.xLabel, f.xLabel.x + 6, f.xLabel.y - 9);
+  const yOk = !!f.yLabel && !underLabel(f.yLabel);
+  show(els.yLabel, yOk);
+  if (yOk && f.yLabel) place(els.yLabel, f.yLabel.x + 6, f.yLabel.y - 9);
   show(els.scale, !!f.scale);
   if (f.scale && els.scaleBar && els.scaleText) {
     els.scaleBar.style.width = `${f.scale.px.toFixed(1)}px`;

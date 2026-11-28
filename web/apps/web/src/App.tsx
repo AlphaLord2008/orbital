@@ -108,7 +108,9 @@ function Header({ phone }: { phone: boolean }) {
     <header className="hud-header" data-occludes="top">
       <div className="hud-brand">
         <h1 className="hud-brand__name">ORBITAL</h1>
-        <span className="hud-brand__tag">Every orbit here is integrated, not drawn.</span>
+        <span className="hud-brand__tag">
+          Every computed orbit is integrated step by step, not drawn.
+        </span>
       </div>
       <ModeSwitch />
       <nav className="hud-nav" aria-label="Site">
@@ -405,6 +407,7 @@ function Presentation() {
           Exit presentation <span className="orb-kbd">Esc</span>
         </button>
       </header>
+      <Legend />
       {r && ev ? (
         <div className="orb-panel pres-readouts" data-occludes="bottom">
           <div className="pres-readouts__id">

@@ -465,29 +465,136 @@ select.orb-select {
 .diag-computing .orb-progress {
   margin-top: 6px;
 }
+/* Drift plot (WA-F8): running maximum (line, the headline value, ends at the dot) vs drift at
+   each sample (band, played buckets only). Axes on the left and bottom only. */
+.orb-plot {
+  margin: 0;
+  gap: 6px;
+}
+.orb-plot__value {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+.orb-plot__value-tag {
+  font: 400 12px/16px var(--font-sans);
+  color: var(--text-tertiary);
+}
+.orb-plot__body {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 8px;
+  margin-top: 18px; /* room for the factored power of ten */
+}
+.orb-plot__factor {
+  position: absolute;
+  left: 0;
+  top: -18px;
+  font: 400 12px/14px var(--font-mono);
+  color: var(--text-tertiary);
+}
+.orb-plot__yaxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: -6px 0;
+  font: 400 12px/12px var(--font-mono);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+.orb-plot .orb-plot__frame {
+  height: 96px;
+  border: 0;
+  border-left: 1px solid var(--line-control);
+  border-bottom: 1px solid var(--line-control);
+  border-radius: 0;
+  background: transparent;
+}
+.orb-plot__axis,
+.orb-plot__legend {
+  margin-left: 44px;
+}
+.orb-plot__played {
+  color: var(--text-secondary);
+}
+.orb-plot__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-tertiary);
+}
+.plot-key {
+  display: inline-block;
+  width: 14px;
+  height: 8px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.plot-key--max {
+  height: 0;
+  border-top: 2px solid var(--accent-spacecraft);
+  vertical-align: 4px;
+}
+.plot-key--band {
+  background: color-mix(in srgb, var(--accent-spacecraft) 30%, transparent);
+}
+.plot-grid {
+  stroke: var(--line-hairline);
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.plot-played {
+  fill: var(--text-primary);
+  fill-opacity: 0.03;
+}
 .plot-band {
-  fill: #e6e9ef;
-  fill-opacity: 0.85;
+  fill: var(--accent-spacecraft);
+  fill-opacity: 0.3;
+}
+.plot-max {
+  fill: none;
+  stroke: var(--accent-spacecraft);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.plot-now {
+  stroke: var(--text-secondary);
+  stroke-opacity: 0.5;
+  vector-effect: non-scaling-stroke;
 }
 .plot-dot {
-  fill: var(--accent-spacecraft);
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: var(--accent-spacecraft);
+  box-shadow: 0 0 0 2px var(--bg-panel);
+  pointer-events: none;
 }
 .plot-limit {
-  stroke: var(--text-tertiary);
+  stroke: var(--text-secondary);
   stroke-width: 1;
-  stroke-dasharray: 3 3;
+  stroke-dasharray: 4 3;
   vector-effect: non-scaling-stroke;
 }
 .plot-limit__label {
   position: absolute;
   right: 4px;
-  margin-top: 2px;
-  color: var(--text-tertiary);
+  transform: translateY(-100%);
+  padding-bottom: 1px;
+  color: var(--text-secondary);
   font: 400 12px/14px var(--font-mono);
   pointer-events: none;
 }
-.orb-plot {
-  margin: 0;
+.plot-limit__label--below {
+  transform: none;
+  padding: 1px 0 0;
 }
 .orb-tier-card {
   display: grid;
@@ -572,14 +679,34 @@ select.orb-select {
 .hud-header--pres .hud-brand__name {
   font-size: 18px;
 }
-.pres-readouts {
+/* Frameless: the run is the subject, the numbers sit on the scene with legibility halos, and the
+   view frames the orbit above them (data-occludes). */
+.app--presentation .pres-readouts {
   position: absolute;
-  left: 16px;
-  bottom: 104px;
+  left: calc(32px + env(safe-area-inset-left));
+  right: calc(32px + env(safe-area-inset-right));
+  bottom: 112px;
   display: flex;
-  gap: 48px;
+  gap: 64px;
   align-items: flex-end;
-  padding: 20px 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  text-shadow:
+    0 0 3px var(--bg-space),
+    0 1px 3px var(--bg-space);
+}
+.app--presentation .hud-bottom .orb-transport {
+  background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+}
+.app--presentation .hud-legend {
+  top: 72px;
+}
+.app--presentation .scene-overlay__scale {
+  left: auto;
+  right: calc(32px + env(safe-area-inset-right));
+  bottom: 112px;
 }
 .pres-readouts__id {
   display: grid;
@@ -732,9 +859,9 @@ select.orb-select {
   min-height: 32px;
 }
 .app--phone .scene-overlay__scale {
-  left: 16px;
-  bottom: auto;
-  top: 104px;
+  left: calc(16px + env(safe-area-inset-left));
+  top: auto;
+  bottom: 12px; /* just above the sheet: the top of the view belongs to the header and tier */
 }
 .app--phone .scene-banner {
   top: 104px;
@@ -793,4 +920,44 @@ select.orb-select {
   .hud-header--phone .orb-mode__item {
     padding: 0 10px;
   }
+}
+
+/* Evidence table: numbers never wrap (a value split over two lines reads as two values);
+   test names wrap instead. Numeric headers align with their columns. */
+.orb-gates th:not(:first-child),
+.orb-gates td.num {
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 12px;
+}
+.orb-gates td {
+  vertical-align: baseline;
+  padding: 5px 0;
+}
+.orb-gates td:first-child {
+  hyphens: manual;
+}
+.orb-gates td.num:last-child {
+  font-weight: 500;
+}
+
+/* Legibility halos for anything drawn straight over the scene (map-label style): the Earth's
+   texture behind a label must never decide whether it can be read. Not a glow: same colour as
+   the background, 2–3 px. */
+.scene-overlay__label,
+.hud-legend,
+.orb-scalebar,
+.hud-meta {
+  text-shadow:
+    0 0 2px var(--bg-space),
+    0 0 3px var(--bg-space),
+    0 1px 2px var(--bg-space);
+}
+
+/* Panels scroll internally: a thin, quiet scrollbar shows there is more. */
+.orb-panel__body,
+.phone-sheet__body,
+.orb-dialog__body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-control) transparent;
 }

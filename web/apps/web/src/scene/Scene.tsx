@@ -181,8 +181,8 @@ function createView(host: HTMLElement): View {
     future: makeLine({ color: COLORS.accent, widthPx: 1.5, opacity: 0.55, dashPx: [6, 5] }),
     futureJoin: makeLine({ color: COLORS.accent, widthPx: 1.5, opacity: 0.55, dashPx: [6, 5] }),
     exact: makeLine({ color: COLORS.analytic, widthPx: 1, dashPx: [2, 4] }),
-    axisX: makeLine({ color: COLORS.axis, widthPx: 1, opacity: 0.6 }),
-    axisY: makeLine({ color: COLORS.axis, widthPx: 1, opacity: 0.6 }),
+    axisX: makeLine({ color: COLORS.axis, widthPx: 1, opacity: 0.4 }),
+    axisY: makeLine({ color: COLORS.axis, widthPx: 1, opacity: 0.4 }),
   };
   Object.values(lines).forEach((l) => scene.add(l));
   const ro = new ResizeObserver(resize);
