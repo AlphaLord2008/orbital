@@ -1,5 +1,5 @@
 /**
- * TEMPORARY diagnostic (diag branch only, never merged), round 8 (rules on the scenario card). Round 2: the content process
+ * TEMPORARY diagnostic (diag branch only, never merged), round 9 (which element). Round 2: the content process
  * segfaults (signal 11) nondeterministically, on Explore as well as Analyze. This measures crash
  * rates per method, interleaved so position in the run cannot explain a difference.
  */
@@ -45,10 +45,10 @@ async function run(page: Page, name: string, fn: () => Promise<unknown>) {
   });
   try {
     await fn();
-    console.log(`DIAG8 ${name} ok`);
+    console.log(`DIAG9 ${name} ok`);
   } catch (e) {
     console.log(
-      `DIAG8 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
+      `DIAG9 ${name} ${crashed ? 'CRASH' : 'ERROR'} ${(e as Error).message.split('\n')[0] ?? ''}`,
     );
   }
 }
@@ -67,45 +67,41 @@ async function plainExcluding(page: Page, exclude: string | null) {
   }, exclude);
 }
 
-async function onCard(page: Page, rules: string[] | null) {
+type Ctx = { include: string[]; exclude?: string[] };
+async function ruleOn(page: Page, ctx: Ctx, rule: string) {
   await ready(page, APP);
   await page.waitForTimeout(500);
   await page.evaluate(AXE);
-  return page.evaluate(async (r) => {
-    const axe = (
-      window as unknown as {
-        axe: { run: (c: unknown, o: unknown) => Promise<{ violations: unknown[] }> };
-      }
-    ).axe;
-    return (
-      await axe.run({ include: ['.hud-left'] }, r ? { runOnly: { type: 'rule', values: r } } : {})
-    ).violations.length;
-  }, rules);
+  return page.evaluate(
+    async ({ c, r }) => {
+      const axe = (
+        window as unknown as {
+          axe: { run: (c: unknown, o: unknown) => Promise<{ violations: unknown[] }> };
+        }
+      ).axe;
+      return (await axe.run(c, { runOnly: { type: 'rule', values: [r] } })).violations.length;
+    },
+    { c: ctx, r: rule },
+  );
 }
 
-for (let i = 1; i <= 4; i++)
-  test(`card, all rules #${String(i)}`, async ({ page }) => {
-    await run(page, 'card all-rules', () => onCard(page, null));
-  });
+const TARGETS: Record<string, Ctx> = {
+  'card section only (descendants excluded)': {
+    include: ['.hud-left'],
+    exclude: ['.hud-left section > *'],
+  },
+  h2: { include: ['.hud-left h2'] },
+  'preset select': { include: ['#preset'] },
+  'number inputs': { include: ['.hud-left input[inputmode="decimal"]'] },
+  'range inputs': { include: ['.hud-left input[type="range"]'] },
+  'field labels': { include: ['.hud-left label'] },
+  'camera buttons': { include: ['.hud-left .cam-seg'] },
+  'help text': { include: ['.hud-left .orb-field__msg'] },
+};
 
-test('card, one rule at a time', async ({ browser }) => {
-  test.setTimeout(900_000);
-  const c0 = await browser.newContext();
-  const p0 = await c0.newPage();
-  await p0.goto('/methodology.html');
-  await p0.evaluate(AXE);
-  const ids = await p0.evaluate(() =>
-    (window as unknown as { axe: { getRules: () => { ruleId: string }[] } }).axe
-      .getRules()
-      .map((r) => r.ruleId),
-  );
-  await c0.close();
-  for (const id of ids) {
-    for (let k = 0; k < 2; k++) {
-      const ctx = await browser.newContext();
-      const page = await ctx.newPage();
-      await run(page, `card rule=${id}`, () => onCard(page, [id]));
-      await ctx.close();
-    }
-  }
-});
+for (const rule of ['aria-allowed-attr', 'nested-interactive', 'landmark-unique'])
+  for (const [name, ctx] of Object.entries(TARGETS))
+    for (let k = 1; k <= 2; k++)
+      test(`elem ${rule} on ${name} #${String(k)}`, async ({ page }) => {
+        await run(page, `${rule} on ${name}`, () => ruleOn(page, ctx, rule));
+      });
